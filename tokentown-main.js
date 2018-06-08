@@ -3,7 +3,7 @@ requirejs.config({
   waitSeconds: 0,
 });
 
-require('tokentown', function(tt) {
+define(['tokentown'], function(tt) {
 
   window.tt = tt;
   
