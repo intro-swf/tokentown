@@ -2,17 +2,6 @@ define([], function() {
 
   'use strict';
   
-  function Token() {
-  }
-  Token.prototype = {
-    eachToken: function() {
-      throw new Error('NYI');
-    },
-    withTokens: function() {
-      throw new Error('NYI');
-    },
-  };
-  
   function Scope() {
     this.entryTypes = Object.create(null);
     this.constantEntries = Object.create(null);
@@ -29,6 +18,18 @@ define([], function() {
       }
       if (!anyClosed) return token.withTokens(tokens);
       return token;
+    },
+  };
+  
+  function Token() {
+  }
+  Token.prototype = {
+    isOpen: false,
+    eachToken: function() {
+      throw new Error('NYI');
+    },
+    withTokens: function() {
+      throw new Error('NYI');
     },
   };
   
@@ -124,12 +125,12 @@ define([], function() {
   }
   
   return {
+    Scope: Scope,
     Token: Token,
     CallToken: CallToken,
     MethodCallToken: MethodCallToken,
     FunctionCallToken: FunctionCallToken,
     LookupToken: LookupToken,
-    Scope: Scope,
   };
 
 });
