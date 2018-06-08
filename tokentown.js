@@ -26,12 +26,18 @@ define([], function() {
   }
   LookupToken.prototype = Object.create(Token.prototype);
   
+  function Scope() {
+    this.entryTypes = Object.create(null);
+    this.constantEntries = Object.create(null);
+  }
+  
   return {
     Token: Token,
     CallToken: CallToken,
     MethodCallToken: MethodCallToken,
     FunctionCallToken: FunctionCallToken,
     LookupToken: LookupToken,
+    Scope: Scope,
   };
 
 });
