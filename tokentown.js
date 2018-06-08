@@ -31,6 +31,71 @@ define([], function() {
     this.constantEntries = Object.create(null);
   }
   
+  function and() {
+    var value = true;
+    for (var i = 0; i < arguments.length; i++) {
+      value = value && arguments[i];
+      if (!value) break;
+    }
+    return value;
+  }
+  and.lazy = function(obj) {
+    if (!obj.value) {
+      obj.next_i = obj.stop_i;
+    }
+    return obj.value;
+  };
+  
+  function or() {
+    var value = false;
+    for (var i = 0; i < arguments.length; i++) {
+      value = value || arguments[i];
+      if (value) break;
+    }
+    return value;
+  }
+  or.lazy = function(obj) {
+    if (obj.value) {
+      obj.next_i = obj.stop_i;
+    }
+    return obj.value;
+  };
+  
+  function conditional(condition, thenValue, elseValue) {
+    return condition ? thenValue : elseValue;
+  }
+  conditional.lazy = function(obj) {
+    if (obj.next_i > 1) obj.next_i = obj.stop_i;
+    else if (!obj.value) obj.next_i = 2;
+  }
+  
+  function valueSwitch(value) {
+    if (arguments.length % 2) {
+      const default_i = arguments.length-1;
+      for (var i = 1; i < default_i; i += 2) {
+        if (value === arguments[i]) return arguments[i+1];
+      }
+      return arguments[default_i];
+    }
+    else {
+      for (var i = 1; i < arguments.length; i += 2) {
+        if (value === arguments[i]) return arguments[i+1];
+      }
+      // no default case
+      return void 0;
+    }
+  }
+  valueSwitch.lazy = function(obj) {
+    const theValue = obj.value;
+    obj.func = function(obj) {
+      if (obj.next_i === obj.stop_i) return obj.value;
+      else if (obj.value === theValue) {
+        obj.func = function(obj) { return obj.value; };
+      }
+      else obj.next_i++;
+    };
+  }
+  
   return {
     Token: Token,
     CallToken: CallToken,
