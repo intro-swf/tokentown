@@ -4,6 +4,33 @@ define([], function() {
   
   function Token() {
   }
+  Token.prototype = {
+    eachToken: function() {
+      throw new Error('NYI');
+    },
+    withTokens: function() {
+      throw new Error('NYI');
+    },
+  };
+  
+  function Scope() {
+    this.entryTypes = Object.create(null);
+    this.constantEntries = Object.create(null);
+  }
+  Scope.prototype = {
+    enclose: function(token) {
+      if (!token.isOpen) return token;
+      var tokens = [];
+      var anyClosed = false;
+      for (var sub of token.eachToken()) {
+        var enclosed = this.enclose(sub);
+        tokens.push(enclosed);
+        if (enclosed !== sub) anyClosed = true;
+      }
+      if (!anyClosed) return token.withTokens(tokens);
+      return token;
+    },
+  };
   
   function CallToken() {
   }
