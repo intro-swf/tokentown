@@ -5,6 +5,8 @@ requirejs.config({
 
 define(['tokentown'], function(tt) {
 
+  'use strict';
+  
   window.tt = tt;
   
   console.log('hello world');
