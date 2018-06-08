@@ -9,18 +9,23 @@ define([], function() {
   }
   CallToken.prototype = Object.create(Token.prototype);
   
-  function MethodCallToken() {
+  function MethodCallToken(targetObject, targetMethodName, parameters) {
+    this.targetObject = targetObject;
+    this.targetMethodName = targetMethodName;
+    this.parameters = [].slice.apply(parameters || []);
   }
   MethodCallToken.prototype = Object.create(CallToken.prototype);
 
-  function FunctionCallToken() {
+  function FunctionCallToken(targetFunction, parameters) {
+    this.targetFunction = targetFunction;
+    this.parameters = [].slice.apply(parameters || []);
   }
   FunctionCallToken.prototype = Object.create(CallToken.prototype);
   
   function LookupToken() {
   }
   LookupToken.prototype = Object.create(Token.prototype);
-
+  
   return {
     Token: Token,
     CallToken: CallToken,
