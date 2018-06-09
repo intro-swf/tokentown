@@ -4,6 +4,15 @@ define([], function() {
   
   const NULL_ITER = function*(){};
   
+  function LazyEvaluator(initialValue, valueCount) {
+    this.value = initialValue;
+    this.stop_i = valueCount;
+  }
+  LazyEvaluator.prototype = {
+    i: 0,
+    next_i: 1,
+  };
+
   function Scope() {
     this.entryTypes = Object.create(null);
     this.constantEntries = Object.create(null);
