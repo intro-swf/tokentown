@@ -217,7 +217,7 @@ define(function() {
       }
     }, {
       doesNotBlock: true,
-    });
+    }),
   });
   
   function ScopeWrite(scope, varName, operator, rhsOp) {
