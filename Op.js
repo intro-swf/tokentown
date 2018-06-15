@@ -47,6 +47,14 @@ define(function() {
       }
       return false;
     },
+    comma: function() {
+      var ops = Array.prototype.slice.apply(arguments);
+      ops.splice(0, 0, this);
+      return new Block(ops);
+    },
+    comma_if: function(ifOp, thenOp) {
+      return this.comma(new IfElseIf(ifOp, thenOp));
+    },
   };
   
   function Block(ops) {
@@ -275,6 +283,55 @@ define(function() {
     },
   });
   
+  function IfElseIf(ops) {
+    if (ops.length < 2) {
+      throw new Error('IfElseIf requires at least 2 arguments');
+    }
+    this.length = arguments.length;
+    for (var i = 0; i < ops.length; i++) {
+      this[i] = ops[i];
+    }
+  }
+  IfElseIf.prototype = Object.create(Op.prototype);
+  Object.assign(IfElseIf.prototype, {
+    name: 'if',
+    else: function(elseOp) {
+      if (this.length % 2) throw new Error('else clause already specified');
+      return new IfElseIf(Array.prototype.slice.apply(this).concat(elseOp));
+    },
+    else_if: function(ifOp, thenOp) {
+      return this.else(new IfElseIf(ifOp, thenOp));
+    },
+    evaluator: Object.assign(function IF() {
+      for (var i = 0; i < arguments.length; i += 2) {
+        if (arguments[i]) return arguments[i+1];
+      }
+    }, {
+      isDeterministic: true,
+      doesNotBlock: true,
+      doesNotModify: true,
+      lazy: function LAZY_IF(lazifier) {
+        if (lazifier.i % 2) {
+          // this must be a "then" case
+          // short-circuit to the end
+          lazifier.next_i = lazifier.stop_i;
+        }
+        else if (!lazifier.value && lazifier.next_i < lazifier.stop_i) {
+          // this is a condition that turned out to be false, so
+          // skip over the "then" value
+          if (++lazifier.next_i === lazifier.stop_i) {
+            // no conditions met and there is no "else"
+            lazifier.value = void 0;
+          }
+        }
+        else {
+          // this must either be a condition or the final "else" case
+          // either way, pass through the value and continue
+        }
+      },
+    });
+  });
+  
   return Object.assign(Op, {
     Block: Block,
     Constant: Constant,
@@ -282,6 +339,7 @@ define(function() {
     Write: Write,
     ScopeRead: ScopeRead,
     ScopeWrite: ScopeWrite,
+    IfElseIf: IfElseIf,
   });
 
 });
