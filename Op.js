@@ -29,7 +29,7 @@ define(function() {
       for (var i = 0; i < this.length; i++) {
         var c = this[i].getConstantOp();
         if (!c) return null;
-        values[i] = c.getJSONPrimitiveOrSelf();
+        values[i] = c.value;
       }
       return Constant.from(fn.apply(this, values));
     },
