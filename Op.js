@@ -144,10 +144,11 @@ define(function() {
   Object.assign(Read.prototype, {
     length: 2,
     toJSON: function() {
-      return {
-        "o": this[0].getJSONPrimitiveOrSelf(),
-        "k": this[1].getJSONPrimitiveOrSelf(),
-      };
+      const o = this[0].getJSONPrimitiveOrSelf(), k = this[1].getJSONPrimitiveOrSelf();
+      if (o instanceof ReadScope) {
+        return {v:o.varName, k:k};
+      }
+      return {o:o, k:k};
     },
     evaluator: Object.assign(function(target, key) {
       return target[key];
@@ -156,20 +157,45 @@ define(function() {
     });
   });
   
+  function ReadScope(scope, varName) {
+    this.scope = scope;
+    if (typeof varName !== 'string') {
+      throw new Error('variable name must be a string');
+    }
+    this.varName = varName;
+  }
+  ReadScope.prototype = Object.create(Op.prototype);
+  Object.assign(ReadScope.prototype, {
+    toJSON: function() {
+      return {"v":this.varName};
+    },
+    evaluator: Object.assign(function() {
+      if (!this.scope) throw new Error('variable not bound to scope');
+      return this.scope[this.varName];
+    }, {
+      doesNotBlock: true,
+      doesNotModify: true, // ! scopes must not allow arbitrary setter functions
+    });
+  });
+  
   function Write(targetOp, keyOp, operator, rhsOp) {
-    this.targetOp = this[0] = targetOp;
-    this.keyOp = this[1] = keyOp;
+    this[0] = targetOp;
+    this[1] = keyOp;
     this.operator = operator;
-    this.rhsOp = this[2] = rhsOp;
+    this[2] = rhsOp;
   }
   Write.prototype = Object.create(Op.prototype);
   Object.assign(Write.prototype, {
     length: 3,
     toJSON: function() {
-      var json = {
-        "o": this[0].getJSONPrimitiveOrSelf(),
-        "k": this[1].getJSONPrimitiveOrSelf(),
-      };
+      const o = this[0].getJSONPrimitiveOrSelf(), k = this[1].getJSONPrimitiveOrSelf();
+      var json;
+      if (o instanceof ReadScope) {
+        json = {v:o.varName, k:k};
+      }
+      else {
+        json = {o:o, k:k};
+      }
       json[this.operator] = this[2].getJSONPrimitiveOrSelf();
       return json;
     },
@@ -192,6 +218,24 @@ define(function() {
     }, {
       doesNotBlock: true,
     });
+  });
+  
+  function WriteScope(scope, varName, operator, rhsOp) {
+    this[0] = Constant.from(scope);
+    if (typeof varName !== 'string') {
+      throw new Error('variable name must be string');
+    }
+    this[1] = Constant.from(varName);
+    this.operator = operator;
+    this[2] = rhsOp;
+  }
+  WriteScope.prototype = Object.create(Write.prototype);
+  Object.assign(WriteScope.prototype, {
+    toJSON: function() {
+      var json = {v:this[1].getJSONPrimitiveOrSelf()};
+      json[this.operator] = this[2].getJSONPrimitiveOrSelf();
+      return json;
+    },
   });
   
   return Object.assign(Op, {
