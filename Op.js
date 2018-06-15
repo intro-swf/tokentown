@@ -175,7 +175,7 @@ define(function() {
     }, {
       doesNotBlock: true,
       doesNotModify: true, // ! scopes must not allow arbitrary setter functions
-    });
+    }),
   });
   
   function Write(targetOp, keyOp, operator, rhsOp) {
