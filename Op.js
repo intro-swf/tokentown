@@ -37,22 +37,59 @@ define(function() {
       var c = this.getConstantOp();
       return c ? c.getJSONPrimitiveOrSelf() : this;
     },
+    simplify: function() {
+      return this;
+    },
+    get hasSideEffects() {
+      if (!this.evaluator.doesNotModify || !this.evaluator.doesNotBlock) return true;
+      for (var i = 0; i < this.length; i++) {
+        if (this[i].hasSideEffects) return true;
+      }
+      return false;
+    },
   };
   
   function Block(ops) {
     for (var i = 0; i < ops.length; i++) {
-      if (ops[i] instanceof Block) {
-        for (var j = 0; j < ops[i].length; j++) {
-          this[this.length++] = ops[i][j];
-        }
-      }
-      else this[this.length++] = ops[i];
+      this[this.length++] = ops[i];
     }
   }
   Block.prototype = Object.create(Op.prototype);
   Object.assign(Block.prototype, {
     toJSON: function() {
       return Array.prototype.slice.apply(this);
+    },
+    simplify: function() {
+      var i;
+      for (i = 0; i < this.length; i++) {
+        if (typeof this[i] instanceof Block) break;
+        if (!this[i].hasSideEffects && i+1 < this.length) {
+          break;
+        }
+      }
+      if (i === this.length) {
+        if (i === 0) return Block.EMPTY;
+        return this;
+      }
+      var copy = [];
+      for (var i = 0; i < this.length; i++) {
+        if (this[i] instanceof Block) {
+          copy.splice(copy.length, 0, this[i].simplify());
+        }
+        else if (this[i].hasSideEffects || i+1 === this.length) {
+          copy.push(this[i]);
+        }
+      }
+      switch (copy.length) {
+        case 0: return Block.EMPTY;
+        case 1:
+          copy = copy[0];
+          var c = copy.getConstantOp();
+          if (c && typeof c.value === 'undefined') return Block.EMPTY;
+          return copy;
+        default:
+          return new Block(copy);
+      }
     },
     evaluator: Object.assign(function BLOCK() {
       return arguments[arguments.length-1];
