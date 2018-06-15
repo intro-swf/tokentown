@@ -154,7 +154,7 @@ define(function() {
       return target[key];
     }, {
       doesNotBlock: true,
-    });
+    }),
   });
   
   function ScopeRead(scope, varName) {
