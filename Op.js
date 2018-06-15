@@ -136,9 +136,69 @@ define(function() {
     return new Constant(value);
   };
   
+  function Read(targetOp, keyOp) {
+    this[0] = targetOp;
+    this[1] = keyOp;
+  }
+  Read.prototype = Object.create(Op.prototype);
+  Object.assign(Read.prototype, {
+    length: 2,
+    toJSON: function() {
+      return {
+        "o": this[0].getJSONPrimitiveOrSelf(),
+        "k": this[1].getJSONPrimitiveOrSelf(),
+      };
+    },
+    evaluator: Object.assign(function(target, key) {
+      return target[key];
+    }, {
+      doesNotBlock: true,
+    });
+  });
+  
+  function Write(targetOp, keyOp, operator, rhsOp) {
+    this.targetOp = this[0] = targetOp;
+    this.keyOp = this[1] = keyOp;
+    this.operator = operator;
+    this.rhsOp = this[2] = rhsOp;
+  }
+  Write.prototype = Object.create(Op.prototype);
+  Object.assign(Write.prototype, {
+    length: 3,
+    toJSON: function() {
+      var json = {
+        "o": this[0].getJSONPrimitiveOrSelf(),
+        "k": this[1].getJSONPrimitiveOrSelf(),
+      };
+      json[this.operator] = this[2].getJSONPrimitiveOrSelf();
+      return json;
+    },
+    evaluator: Object.assign(function(target, key, rhs) {
+      switch (this.operator) {
+        case '=': return target[key] = rhs;
+        case '+=': return target[key] += rhs;
+        case '-=': return target[key] -= rhs;
+        case '/=': return target[key] /= rhs;
+        case '*=': return target[key] *= rhs;
+        case '%=': return target[key] %= rhs;
+        case '&=': return target[key] &= rhs;
+        case '^=': return target[key] ^= rhs;
+        case '|=': return target[key] |= rhs;
+        case '<<=': return target[key] <<= rhs;
+        case '>>=': return target[key] >>= rhs;
+        case '>>>=': return target[key] >>>= rhs;
+        default: throw new Error('unknown write operator: ' + this.operator);
+      }
+    }, {
+      doesNotBlock: true,
+    });
+  });
+  
   return Object.assign(Op, {
     Block: Block,
     Constant: Constant,
+    Read: Read,
+    Write: Write,
   });
 
 });
