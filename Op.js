@@ -95,7 +95,7 @@ define(function() {
     },
     evaluator: Object.assign(function() {
       return this.value;
-    }, {isDeterministic:true, doesNotBlock:true, doesNotModify:true},
+    }, {isDeterministic:true, doesNotBlock:true, doesNotModify:true}),
   });
   Constant.TRUE = new Constant(true);
   Constant.FALSE = new Constant(false);
