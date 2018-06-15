@@ -145,7 +145,7 @@ define(function() {
     length: 2,
     toJSON: function() {
       const o = this[0].getJSONPrimitiveOrSelf(), k = this[1].getJSONPrimitiveOrSelf();
-      if (o instanceof ReadScope) {
+      if (o instanceof ScopeRead) {
         return {v:o.varName, k:k};
       }
       return {o:o, k:k};
@@ -157,15 +157,15 @@ define(function() {
     });
   });
   
-  function ReadScope(scope, varName) {
+  function ScopeRead(scope, varName) {
     this.scope = scope;
     if (typeof varName !== 'string') {
       throw new Error('variable name must be a string');
     }
     this.varName = varName;
   }
-  ReadScope.prototype = Object.create(Op.prototype);
-  Object.assign(ReadScope.prototype, {
+  ScopeRead.prototype = Object.create(Op.prototype);
+  Object.assign(ScopeRead.prototype, {
     toJSON: function() {
       return {"v":this.varName};
     },
@@ -190,7 +190,7 @@ define(function() {
     toJSON: function() {
       const o = this[0].getJSONPrimitiveOrSelf(), k = this[1].getJSONPrimitiveOrSelf();
       var json;
-      if (o instanceof ReadScope) {
+      if (o instanceof ScopeRead) {
         json = {v:o.varName, k:k};
       }
       else {
@@ -220,7 +220,7 @@ define(function() {
     });
   });
   
-  function WriteScope(scope, varName, operator, rhsOp) {
+  function ScopeWrite(scope, varName, operator, rhsOp) {
     this[0] = Constant.from(scope);
     if (typeof varName !== 'string') {
       throw new Error('variable name must be string');
@@ -229,8 +229,8 @@ define(function() {
     this.operator = operator;
     this[2] = rhsOp;
   }
-  WriteScope.prototype = Object.create(Write.prototype);
-  Object.assign(WriteScope.prototype, {
+  ScopeWrite.prototype = Object.create(Write.prototype);
+  Object.assign(ScopeWrite.prototype, {
     toJSON: function() {
       var json = {v:this[1].getJSONPrimitiveOrSelf()};
       json[this.operator] = this[2].getJSONPrimitiveOrSelf();
@@ -243,6 +243,8 @@ define(function() {
     Constant: Constant,
     Read: Read,
     Write: Write,
+    ScopeRead: ScopeRead,
+    ScopeWrite: ScopeWrite,
   });
 
 });
