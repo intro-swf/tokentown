@@ -329,7 +329,7 @@ define(function() {
           // either way, pass through the value and continue
         }
       },
-    });
+    }),
   });
   
   return Object.assign(Op, {
