@@ -3,12 +3,10 @@ requirejs.config({
   waitSeconds: 0,
 });
 
-define(['tokentown'], function(tt) {
+define(['Op'], function(Op) {
 
   'use strict';
   
-  window.tt = tt;
-  
-  console.log('hello world');
+  console.log(window.Op = Op);
 
 });
