@@ -332,6 +332,53 @@ define(function() {
     }),
   });
   
+  function FunctionCall(target) {
+    this.length = arguments.length;
+    for (var i = 0; i < arguments.length; i++) {
+      this[i] = arguments[i];
+    }
+  }
+  FunctionCall.prototype = Object.create(Op.prototype);
+  Object.assign(FunctionCall.prototype, {
+    name: '()',
+    evaluator: function(func, a, b, c) {
+      switch (arguments.length) {
+        case 1: return func();
+        case 2: return func(a);
+        case 3: return func(a, b);
+        case 4: return func(a, b, c);
+        default: return func.apply(null, Array.slice.call(arguments, 1));
+      }
+    },
+  });
+  
+  function MethodCall(targetOp, methodOp) {
+    this.length = arguments.length;
+    for (var i = 0; i < arguments.length; i++) {
+      this[i] = arguments[i];
+    }
+  }
+  MethodCall.prototype = Object.create(Op.prototype);
+  Object.assign(MethodCall.prototype, {
+    name: '()',
+    toJSON: function() {
+      var json = ['()'];
+      if (this[0] instanceof ScopeRead) {
+        json.push({v:this[0].varName, k:this[1].getJSONPrimitiveOrSelf()});
+      }
+      else {
+        json.push({o:this[0].getJSONPrimitiveOrSelf(), k:this[1].getJSONPrimitiveOrSelf()});
+      }
+      for (var i = 2; i < this.length; i++) {
+        json.push(this[i].getJSONPrimitiveOrSelf());
+      }
+      return json;
+    },
+    evaluator: function(target, methodName) {
+      return target[methodName].apply(target, Array.prototype.slice.call(arguments, 2));
+    },
+  });
+  
   return Object.assign(Op, {
     Block: Block,
     Constant: Constant,
@@ -340,6 +387,8 @@ define(function() {
     ScopeRead: ScopeRead,
     ScopeWrite: ScopeWrite,
     IfElseIf: IfElseIf,
+    FunctionCall: FunctionCall,
+    MethodCall: MethodCall,
   });
 
 });
