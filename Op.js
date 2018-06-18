@@ -340,7 +340,20 @@ define(function() {
   }
   FunctionCall.prototype = Object.create(Op.prototype);
   Object.assign(FunctionCall.prototype, {
-    name: '()',
+    toJSON: function() {
+      var args = [];
+      for (var i = 1; i < this.length; i++) {
+        args.push(this[i].getJSONPrimitiveOrSelf());
+      }
+      if (this[0] instanceof ScopeRead) {
+        args.splice(0, 0, this[0].varName);
+        return args;
+      }
+      else {
+        var json = {o:this[0].getJSONPrimitiveOrSelf(), '()':args};
+      }
+      return json;
+    },
     evaluator: function(func, a, b, c) {
       switch (arguments.length) {
         case 1: return func();
@@ -352,30 +365,28 @@ define(function() {
     },
   });
   
-  function MethodCall(targetOp, methodOp) {
-    this.length = arguments.length;
-    for (var i = 0; i < arguments.length; i++) {
-      this[i] = arguments[i];
+  function MethodCall(targetOp, methodName) {
+    this.length = arguments.length-1;
+    this.methodName = methodName;
+    this[0] = targetOp;
+    for (var i = 2; i < arguments.length; i++) {
+      this[i-1] = arguments[i];
     }
   }
   MethodCall.prototype = Object.create(Op.prototype);
   Object.assign(MethodCall.prototype, {
-    name: '()',
     toJSON: function() {
-      var json = ['()'];
+      var args = [];
+      for (var i = 1; i < this.length; i++) {
+        args.push(this[i].getJSONPrimitiveOrSelf());
+      }
       if (this[0] instanceof ScopeRead) {
-        json.push({v:this[0].varName, k:this[1].getJSONPrimitiveOrSelf()});
+        return {v:this[0].varName, k:this.methodName, '()':args};
       }
-      else {
-        json.push({o:this[0].getJSONPrimitiveOrSelf(), k:this[1].getJSONPrimitiveOrSelf()});
-      }
-      for (var i = 2; i < this.length; i++) {
-        json.push(this[i].getJSONPrimitiveOrSelf());
-      }
-      return json;
+      return {o:this[0].getJSONPrimitiveOrSelf(), k:this.methodName, '()':args};
     },
-    evaluator: function(target, methodName) {
-      return target[methodName].apply(target, Array.prototype.slice.call(arguments, 2));
+    evaluator: function(target) {
+      return target[this.methodName].apply(target, Array.prototype.slice.call(arguments, 1));
     },
   });
   
