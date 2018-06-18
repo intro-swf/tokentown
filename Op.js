@@ -55,6 +55,24 @@ define(function() {
     comma_if: function(ifOp, thenOp) {
       return this.comma(new IfElseIf(ifOp, thenOp));
     },
+    call: function() {
+      var args = [].slice.apply(arguments);
+      for (var i = 0; i < args.length; i++) {
+        if (!(args[i] instanceof Op)) {
+          args[i] = Constant.from(args[i]);
+        }
+      }
+      return new FunctionCall(this, args);
+    },
+    methodCall: function(methodName) {
+      var args = [].slice.call(arguments, 1);
+      for (var i = 0; i < args.length; i++) {
+        if (!(args[i] instanceof Op)) {
+          args[i] = Constant.from(args[i]);
+        }
+      }
+      return new MethodCall(this, methodName, args);
+    },
   };
   
   function Block(ops) {
@@ -332,10 +350,12 @@ define(function() {
     }),
   });
   
-  function FunctionCall(target) {
-    this.length = arguments.length;
-    for (var i = 0; i < arguments.length; i++) {
-      this[i] = arguments[i];
+  function FunctionCall(targetOp, argOps) {
+    argOps = argOps || [];
+    this.length = 1 + argOps.length;
+    this[0] = targetOp;
+    for (var i = 0; i < argOps.length; i++) {
+      this[1+i] = argOps[i];
     }
   }
   FunctionCall.prototype = Object.create(Op.prototype);
@@ -365,12 +385,13 @@ define(function() {
     },
   });
   
-  function MethodCall(targetOp, methodName) {
-    this.length = arguments.length-1;
+  function MethodCall(targetOp, methodName, argOps) {
+    argOps = argOps || [];
+    this.length = 1 + argOps.length;
     this.methodName = methodName;
     this[0] = targetOp;
-    for (var i = 2; i < arguments.length; i++) {
-      this[i-1] = arguments[i];
+    for (var i = 0; i < argOps.length; i++) {
+      this[1+i] = argOps[i];
     }
   }
   MethodCall.prototype = Object.create(Op.prototype);
