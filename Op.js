@@ -136,7 +136,7 @@ define(function() {
   Constant.prototype = Object.create(Op.prototype);
   Object.assign(Constant.prototype, {
     toJSON: function() {
-      return {"c":this.value};
+      return {"o":this.value};
     },
     getConstantOp: function() {
       return this;
