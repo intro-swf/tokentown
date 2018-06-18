@@ -213,6 +213,26 @@ define(function() {
       }
       return {o:o, k:k};
     },
+    getConstantOp: function() {
+      var target = this[0].getConstantOp();
+      if (!target) return null;
+      var key = this[1].getConstantOp();
+      if (!key) return null;
+      target = target.value;
+      key = key.value;
+      for (;;) {
+        var prop = Object.getPropertyDescriptor(target, key);
+        if (prop) {
+          if ('get' in prop || 'set' in prop || prop.configurable || prop.writable) {
+            return null;
+          }
+          return Constant.from(prop.value);
+        }
+        if (Object.isExtensible(target)) return null;
+        target = Object.getPrototypeOf(target);
+        if (!target) return null;
+      }
+    },
     evaluator: Object.assign(function(target, key) {
       return target[key];
     }, {
