@@ -221,7 +221,7 @@ define(function() {
       target = target.value;
       key = key.value;
       for (;;) {
-        var prop = Object.getPropertyDescriptor(target, key);
+        var prop = Object.getOwnPropertyDescriptor(target, key);
         if (prop) {
           if ('get' in prop || 'set' in prop || prop.configurable || prop.writable) {
             return null;
