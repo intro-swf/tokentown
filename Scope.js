@@ -47,9 +47,6 @@ define(function() {
       if (settings.macros) {
         macros = Object.create(this.macros);
       }
-      else if ( {
-        macros = 
-      }
       return Object.defineProperties(Object.create(Scope.prototype), {
         macros: {value:macros},
         functions: {value:functions},
