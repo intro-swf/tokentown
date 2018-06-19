@@ -371,6 +371,207 @@ define(function() {
     }),
   });
   
+  const DEFAULT = Op.DEFAULT = {};
+  
+  function FallthroughSwitch(targetOp, cases) {
+    this[this.length++] = targetOp;
+    for (var i = 0; i < cases.length; i++) {
+      var c = cases[i];
+      if ('default' in c) {
+        this[this.length++] = Constant.from(DEFAULT);
+        this[this.length++] = c['default'];
+      }
+      else {
+        this[this.length++] = c['case'];
+        this[this.length++] = c['begin'];
+      }
+    }
+  }
+  FallthroughSwitch.prototype = Object.create(Op.prototype);
+  Object.assign(FallthroughSwitch.prototype, {
+    toJSON: function() {
+      var json = ['switch', this[0].toJSONPrimitiveOrSelf()];
+      for (var i = 1; i < this.length; i += 2) {
+        if (this[i] instanceof Constant && this[i].value === DEFAULT) {
+          json.push({
+            'default': this[i+1].toJSONPrimitiveOrSelf(),
+          });
+        }
+        else {
+          json.push({
+            'case': this[i].toJSONPrimitiveOrSelf(),
+            'begin': this[i+1].toJSONPrimitiveOrSelf(),
+          });
+        }
+      }
+      return json;
+    },
+    getConstantOp: function() {
+      var target = this[0].getConstantOp();
+      if (!target) return null;
+      target = target.value;
+      var i, default_i = -1;
+      for (i = 1; i < this.length; i += 2) {
+        var c = this[i].getConstantOp();
+        if (!c) return null;
+        if (c.value === DEFAULT) {
+          default_i = i+1;
+        }
+        else if (c.value === target) {
+          ++i;
+          break;
+        }
+      }
+      if (default_i !== -1) i = default_i;
+      while (i < this.length) {
+        if (!this[i].getConstantOp()) return null;
+        i += 2;
+      }
+      return Constant.UNDEFINED;
+    },
+    evaluator: Object.assign(function SWITCH(target) {
+      // fallthrough switch always evaluates to undefined
+    }, {
+      doesNotModify: true,
+      doesNotBlock: true,
+      isDeterministic: true,
+      lazy: function LAZY_SWITCH(lazifier) {
+        if (lazifier.i % 2) {
+          // case values
+          if (lazifier.value === DEFAULT) {
+            if (lazifier.stop_i > lazifier.next_i + 1) {
+              lazifier.default_i = lazifier.next_i++;
+            }
+          }
+          else if (lazifier.compare !== lazifier.value) {
+            if (++lazifier.next_i >= lazifier.stop_i) {
+              if (typeof lazifier.default_i === 'number') {
+                lazifier.next_i = lazifier.default_i;
+              }
+              else {
+                lazifier.value = void 0;
+              }
+            }
+          }
+        }
+        else if (lazifier.i === 0) {
+          if (lazifier.stop_i === 1) {
+            lazifier.value = void 0;
+          }
+          else {
+            lazifier.compare = lazifier.value;
+          }
+        }
+        else {
+          if (++lazifier.next_i >= lazifier.stop_i) {
+            lazifier.value = void 0;
+          }
+        }
+      },
+    }),
+  });
+  
+  function SimpleSwitch(targetOp, cases) {
+    this[this.length++] = targetOp;
+    for (var i = 0; i < cases.length; i++) {
+      var c = cases[i];
+      if ('default' in c) {
+        this[this.length++] = Constant.from(DEFAULT);
+        this[this.length++] = c['default'];
+      }
+      else {
+        this[this.length++] = c['case'];
+        this[this.length++] = c['then'];
+      }
+    }
+  }
+  SimpleSwitch.prototype = Object.create(Op.prototype);
+  Object.assign(SimpleSwitch.prototype, {
+    toJSON: function() {
+      var json = ['switch', this[0].toJSONPrimitiveOrSelf()];
+      for (var i = 1; i < this.length; i += 2) {
+        if (this[i] instanceof Constant && this[i].value === DEFAULT) {
+          json.push({
+            'default': this[i+1].toJSONPrimitiveOrSelf(),
+          });
+        }
+        else {
+          json.push({
+            'case': this[i].toJSONPrimitiveOrSelf(),
+            'then': this[i+1].toJSONPrimitiveOrSelf(),
+          });
+        }
+      }
+      return json;
+    },
+    getConstantOp: function() {
+      var target = this[0].getConstantOp();
+      if (!target) return null;
+      target = target.value;
+      var i, default_i = -1;
+      for (i = 1; i < this.length; i += 2) {
+        var c = this[i].getConstantOp();
+        if (!c) return null;
+        if (c.value === DEFAULT) {
+          default_i = i+1;
+        }
+        else if (c.value === target) {
+          return this[i+1].getConstantOp();
+        }
+      }
+      if (default_i > -1) {
+        return this[default_i].getConstantOp();
+      }
+    },
+    evaluator: Object.assign(function SWITCH(target) {
+      var default_i = -1;
+      for (var i = 1; i < arguments.length; i += 2) {
+        if (arguments[i] === DEFAULT) {
+          default_i = arguments[i+1];
+        }
+        else if (target === arguments[i]) {
+          return arguments[i+1];
+        }
+      }
+      if (default_i !== -1) return arguments[default_i];
+    }, {
+      doesNotModify: true,
+      doesNotBlock: true,
+      isDeterministic: true,
+      lazy: function LAZY_SWITCH(lazifier) {
+        if (lazifier.i % 2) {
+          // case values
+          if (lazifier.value === DEFAULT) {
+            if (lazifier.stop_i > lazifier.next_i + 1) {
+              lazifier.default_i = lazifier.next_i++;
+            }
+          }
+          else if (lazifier.compare !== lazifier.value) {
+            if (++lazifier.next_i >= lazifier.stop_i) {
+              if (typeof lazifier.default_i === 'number') {
+                lazifier.next_i = lazifier.default_i;
+              }
+              else {
+                lazifier.value = void 0;
+              }
+            }
+          }
+        }
+        else if (lazifier.i === 0) {
+          if (lazifier.stop_i === 1) {
+            lazifier.value = void 0;
+          }
+          else {
+            lazifier.compare = lazifier.value;
+          }
+        }
+        else {
+          lazifier.next_i = lazifier.stop_i;
+        }
+      },
+    }),
+  });
+  
   function FunctionCall(targetOp, argOps) {
     argOps = argOps || [];
     this.length = 1 + argOps.length;
@@ -442,6 +643,8 @@ define(function() {
     IfElseIf: IfElseIf,
     FunctionCall: FunctionCall,
     MethodCall: MethodCall,
+    FallthroughSwitch: FallthroughSwitch,
+    SimpleSwitch: SimpleSwitch,
   });
 
 });
