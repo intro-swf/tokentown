@@ -153,8 +153,9 @@ define(function() {
         case 'object':
           if (this.value === null) return null;
           return this;
+        default:
+          return this;
       }
-      return this;
     },
     evaluator: Object.assign(function() {
       return this.value;
