@@ -136,7 +136,7 @@ define(function() {
   Constant.prototype = Object.create(Op.prototype);
   Object.assign(Constant.prototype, {
     toJSON: function() {
-      return {"o":this.value};
+      return {"v":this.value};
     },
     getConstantOp: function() {
       return this;
@@ -210,9 +210,9 @@ define(function() {
     toJSON: function() {
       const o = this[0].getJSONPrimitiveOrSelf(), k = this[1].getJSONPrimitiveOrSelf();
       if (o instanceof ScopePeek) {
-        return {v:o.varName, k:k};
+        return {'$':o.varName, '.':k};
       }
-      return {o:o, k:k};
+      return {'v':o, '.':k};
     },
     getConstantOp: function() {
       var target = this[0].getConstantOp();
@@ -251,7 +251,7 @@ define(function() {
   ScopePeek.prototype = Object.create(Op.prototype);
   Object.assign(ScopePeek.prototype, {
     toJSON: function() {
-      return {"v":this.varName};
+      return {"$":this.varName};
     },
     evaluator: Object.assign(function() {
       if (!this.scope) throw new Error('variable not bound to scope');
@@ -275,10 +275,10 @@ define(function() {
       const o = this[0].getJSONPrimitiveOrSelf(), k = this[1].getJSONPrimitiveOrSelf();
       var json;
       if (o instanceof ScopePeek) {
-        json = {v:o.varName, k:k};
+        json = {'$':o.varName, '.':k};
       }
       else {
-        json = {o:o, k:k};
+        json = {'v':o, '.':k};
       }
       json[this.operator] = this[2].getJSONPrimitiveOrSelf();
       return json;
@@ -309,14 +309,15 @@ define(function() {
     if (typeof varName !== 'string') {
       throw new Error('variable name must be string');
     }
-    this[1] = Constant.from(varName);
+    this.varName = varName;
     this.operator = operator;
-    this[2] = rhsOp;
+    this[1] = rhsOp;
+    this.length = 2;
   }
   ScopePoke.prototype = Object.create(Poke.prototype);
   Object.assign(ScopePoke.prototype, {
     toJSON: function() {
-      var json = {v:this[1].getJSONPrimitiveOrSelf()};
+      var json = {$:this.varName};
       json[this.operator] = this[2].getJSONPrimitiveOrSelf();
       return json;
     },
@@ -592,7 +593,7 @@ define(function() {
         return args;
       }
       else {
-        var json = {o:this[0].getJSONPrimitiveOrSelf(), '()':args};
+        var json = {'v':this[0].getJSONPrimitiveOrSelf(), '()':args};
       }
       return json;
     },
@@ -624,9 +625,9 @@ define(function() {
         args.push(this[i].getJSONPrimitiveOrSelf());
       }
       if (this[0] instanceof ScopePeek) {
-        return {v:this[0].varName, k:this.methodName, '()':args};
+        return {$:this[0].varName, '.':this.methodName, '()':args};
       }
-      return {o:this[0].getJSONPrimitiveOrSelf(), k:this.methodName, '()':args};
+      return {'v':this[0].getJSONPrimitiveOrSelf(), '.':this.methodName, '()':args};
     },
     evaluator: function(target) {
       return target[this.methodName].apply(target, Array.prototype.slice.call(arguments, 1));
