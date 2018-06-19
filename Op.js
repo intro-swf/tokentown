@@ -200,16 +200,16 @@ define(function() {
     return new Constant(value);
   };
   
-  function Read(targetOp, keyOp) {
+  function Peek(targetOp, keyOp) {
     this[0] = targetOp;
     this[1] = keyOp;
   }
-  Read.prototype = Object.create(Op.prototype);
-  Object.assign(Read.prototype, {
+  Peek.prototype = Object.create(Op.prototype);
+  Object.assign(Peek.prototype, {
     length: 2,
     toJSON: function() {
       const o = this[0].getJSONPrimitiveOrSelf(), k = this[1].getJSONPrimitiveOrSelf();
-      if (o instanceof ScopeRead) {
+      if (o instanceof ScopePeek) {
         return {v:o.varName, k:k};
       }
       return {o:o, k:k};
@@ -241,15 +241,15 @@ define(function() {
     }),
   });
   
-  function ScopeRead(scope, varName) {
+  function ScopePeek(scope, varName) {
     this.scope = scope;
     if (typeof varName !== 'string') {
       throw new Error('variable name must be a string');
     }
     this.varName = varName;
   }
-  ScopeRead.prototype = Object.create(Op.prototype);
-  Object.assign(ScopeRead.prototype, {
+  ScopePeek.prototype = Object.create(Op.prototype);
+  Object.assign(ScopePeek.prototype, {
     toJSON: function() {
       return {"v":this.varName};
     },
@@ -262,19 +262,19 @@ define(function() {
     }),
   });
   
-  function Write(targetOp, keyOp, operator, rhsOp) {
+  function Poke(targetOp, keyOp, operator, rhsOp) {
     this[0] = targetOp;
     this[1] = keyOp;
     this.operator = operator;
     this[2] = rhsOp;
   }
-  Write.prototype = Object.create(Op.prototype);
-  Object.assign(Write.prototype, {
+  Poke.prototype = Object.create(Op.prototype);
+  Object.assign(Poke.prototype, {
     length: 3,
     toJSON: function() {
       const o = this[0].getJSONPrimitiveOrSelf(), k = this[1].getJSONPrimitiveOrSelf();
       var json;
-      if (o instanceof ScopeRead) {
+      if (o instanceof ScopePeek) {
         json = {v:o.varName, k:k};
       }
       else {
@@ -304,7 +304,7 @@ define(function() {
     }),
   });
   
-  function ScopeWrite(scope, varName, operator, rhsOp) {
+  function ScopePoke(scope, varName, operator, rhsOp) {
     this[0] = Constant.from(scope);
     if (typeof varName !== 'string') {
       throw new Error('variable name must be string');
@@ -313,8 +313,8 @@ define(function() {
     this.operator = operator;
     this[2] = rhsOp;
   }
-  ScopeWrite.prototype = Object.create(Write.prototype);
-  Object.assign(ScopeWrite.prototype, {
+  ScopePoke.prototype = Object.create(Poke.prototype);
+  Object.assign(ScopePoke.prototype, {
     toJSON: function() {
       var json = {v:this[1].getJSONPrimitiveOrSelf()};
       json[this.operator] = this[2].getJSONPrimitiveOrSelf();
@@ -587,7 +587,7 @@ define(function() {
       for (var i = 1; i < this.length; i++) {
         args.push(this[i].getJSONPrimitiveOrSelf());
       }
-      if (this[0] instanceof ScopeRead) {
+      if (this[0] instanceof ScopePeek) {
         args.splice(0, 0, this[0].varName);
         return args;
       }
@@ -623,7 +623,7 @@ define(function() {
       for (var i = 1; i < this.length; i++) {
         args.push(this[i].getJSONPrimitiveOrSelf());
       }
-      if (this[0] instanceof ScopeRead) {
+      if (this[0] instanceof ScopePeek) {
         return {v:this[0].varName, k:this.methodName, '()':args};
       }
       return {o:this[0].getJSONPrimitiveOrSelf(), k:this.methodName, '()':args};
@@ -636,10 +636,10 @@ define(function() {
   return Object.assign(Op, {
     Block: Block,
     Constant: Constant,
-    Read: Read,
-    Write: Write,
-    ScopeRead: ScopeRead,
-    ScopeWrite: ScopeWrite,
+    Peek: Peek,
+    Poke: Poke,
+    ScopePeek: ScopePeek,
+    ScopePoke: ScopePoke,
     IfElseIf: IfElseIf,
     FunctionCall: FunctionCall,
     MethodCall: MethodCall,
