@@ -97,7 +97,7 @@ define(function() {
             do {
               var entry = this.readExpression(token, 0);
               expr.push(this.revive.apply(this, entry));
-              token = next_token(entry.lastToken, true);
+              token = next_token(entry.finalToken, true);
             } while (token[1] === ',');
             if (token[1] !== '}') {
               throw new Error('invalid content in Blotto snippet');
