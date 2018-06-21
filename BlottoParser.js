@@ -53,7 +53,7 @@ define(function() {
   }
   BlottoParser.prototype = {
     parse: function(src) {
-      for (var token = first_token(src); token; token = next_token(src)) {
+      for (var token = first_token(src); token; token = next_token(token)) {
         this.on_call(token[1]);
       }
     },
