@@ -90,29 +90,53 @@ define(function() {
         case ',':
         case ']':
           throw new Error('invalid content in Blotto snippet');
+        case '{':
+          token = next_token(token, true);
+          expr = ['{}'];
+          if (token[1] !== '}') {
+            do {
+              var entry = this.readExpression(token, 0);
+              expr.push(this.revive.apply(this, entry));
+              token = next_token(entry.lastToken, true);
+            } while (token[1] === ',');
+            if (token[1] !== '}') {
+              throw new Error('invalid content in Blotto snippet');
+            }
+          }
+          break;
         default:
           if (token[1][0] === "'") {
             expr = ["''", token[1].slice(1, -1).replace(/''/g, "'")];
           }
           else if (/^[0-9]/.test(token[1])) {
             var literal = token[1];
-            // immediately followed by a valid word: suffix
-            if (token[0] === token[1] && RX_WORD.test(token.input[token.index + token[0].length] || '')) {
-              token = next_token(token, true);
-              expr = ['#' + token[1], literal];
+            // immediately followed by a word other than e/E/p/P: suffix
+            if (token[0] === token[1]
+                && RX_WORD.test(token.input[token.index + token[0].length] || '')
+                && !/^[ep]$/i.test(token[1])) {
+              expr = ['#'+token[1], literal];
             }
             else {
               expr = ['#', literal];
             }
           }
           else if (RX_WORD.test(token[1])) {
-            if (token.input[token.index + token[1].length] === "'") {
-              var prefix = token[1];
-              token = next_token(token, true);
-              expr = [prefix + "''", token[1].slice(1, -1).replace(/''/g, "'")];
-            }
-            else {
-              expr = ['(name)', token[1]];
+            switch (token.input[token.index + token[1].length]) {
+              case "'":
+                expr = this.readExpression(next_token(token, true), Infinity);
+                expr[0] = token[1] + "''";
+                token = expr.finalToken;
+                break;
+              case '{':
+                this.enter(token[1]+'{}');
+                expr = this.readExpression(next_token(token, true), Infinity);
+                expr[0] = token[1] + "{}";
+                token = expr.finalToken;                
+                this.leave(token[1]+'{}');
+                break;
+              default:
+                expr = ['(name)', token[1]];
+                break;
             }
           }
           else {
@@ -200,6 +224,10 @@ define(function() {
         case "''": return arguments[1];
       }
       return Object.assign([].slice.call(arguments, 1), {op:op});
+    },
+    enter: function(mode) {
+    },
+    leave: function(mode) {
     },
   };
   
