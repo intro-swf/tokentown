@@ -33,7 +33,7 @@ define(function() {
       ,"'([^']+|'')*'"
       // number
       ,'(0x[0-9a-f]+|0b[01]+|0o[0-7]+|[1-9][0-9]*(?:\\.[0-9]+)?(e[+\\-]?[0-9]+)?)'
-    ].join('|') + ')(\\s*)', 'gi');
+    ].join('|') + ')\\s*', 'gi');
   
   function next_token(prev, required) {
     const pos = prev.index + prev[0].length;
@@ -95,7 +95,15 @@ define(function() {
             expr = ["''", token[1].slice(1, -1).replace(/''/g, "'")];
           }
           else if (/^[0-9]/.test(token[1])) {
-            expr = ['#', token[1]];
+            var literal = token[1];
+            // immediately followed by a valid word: suffix
+            if (token[0] === token[1] && RX_WORD.test(token.input.substr(token.index + token[0].length, 1))) {
+              token = next_token(token, true);
+              expr = ['#' + token[1], literal];
+            }
+            else {
+              expr = ['#', literal];
+            }
           }
           else if (RX_WORD.test(token[1])) {
             expr = ['(name)', token[1]];
