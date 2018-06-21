@@ -22,8 +22,8 @@ define(function() {
       ,'<<?=?'
       // > >= >> >>= >>> >>>=
       ,'>>?>?=?'
-      // ! != !==
-      ,'!=?=?'
+      // ! != !== = == ===
+      ,'[!=]=?=?'
       // . [followed by uncaptured word]
       ,'\\.(?=\\s*[^0-9\\s' + escape_rx(SINGLE_SYMBOL_CHARS + COMPOSITE_SYMBOL_CHARS + RESERVED_CHARS) + '])'
       // string
