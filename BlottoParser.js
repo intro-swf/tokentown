@@ -106,7 +106,7 @@ define(function() {
             }
           }
           else if (RX_WORD.test(token[1])) {
-            if (token.input[token.index + token[1].length]] === "'") {
+            if (token.input[token.index + token[1].length] === "'") {
               var prefix = token[1];
               token = next_token(token, true);
               expr = [prefix + "''", token[1].slice(1, -1).replace(/''/g, "'")];
