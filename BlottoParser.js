@@ -177,7 +177,7 @@ define(function() {
           expr.finalToken = token;
           return expr;
         case '(':
-          var call = ['()', expr];
+          var call = ['()', this.revive.apply(this, expr)];
           token = next_token(token, true);
           if (token[1] !== ')') {
             paramLoop: for (;;) {
