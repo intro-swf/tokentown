@@ -236,7 +236,7 @@ define(function() {
         case '#': return +arguments[1];
         case "''": return arguments[1];
         case ';':
-          if (arguments[1] && arguments[1].op === ';') {
+          if (Array.isArray(arguments[1]) && arguments[1].op === ';') {
             arguments[1].push(arguments[2]);
             return arguments[1];
           }
