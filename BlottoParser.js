@@ -54,10 +54,21 @@ define(function() {
   BlottoParser.prototype = {
     parse: function(src) {
       for (var token = first_token(src); token; token = next_token(token)) {
-        this.on_call(token[1]);
+        if (token[1][0] === "'") {
+          this.on_call("''", token[1].slice(1, -1).replace(/''/g, "'"));
+        }
+        else if (/^[0-9]/.test(token[1][0])) {
+          this.on_call('#', token[1]);
+        }
+        else {
+          this.on_get(token[1]);
+        }
       }
     },
     on_call: function() {
+      // to be replaced
+    },
+    on_get: function() {
       // to be replaced
     },
   };
