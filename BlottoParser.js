@@ -30,7 +30,7 @@ define(function() {
       ,"'([^']+|'')*'"
       // number
       ,'(0x[0-9a-f]+|0b[01]+|0o[0-7]+|[1-9][0-9]*(?:\\.[0-9]+)?(e[+\\-]?[0-9]+)?)'
-    ].join('|') + ')(\\s*)', 'i');
+    ].join('|') + ')(\\s*)', 'gi');
   
   function next_token(prev) {
     const pos = prev.index + prev[0].length;
