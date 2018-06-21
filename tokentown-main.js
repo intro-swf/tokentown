@@ -3,10 +3,10 @@ requirejs.config({
   waitSeconds: 0,
 });
 
-define(['Op'], function(Op) {
+define(['BlottoParser'], function(BlottoParser) {
 
   'use strict';
   
-  console.log(window.Op = Op);
+  console.log(window.BlottoParser = BlottoParser);
 
 });
