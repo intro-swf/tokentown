@@ -136,8 +136,9 @@ define(function() {
         case '!': case '~': case '+': case '-': case '++': case '--':
           var operandToken = next_token(token, true);
           expr = this.readExpression(operandToken, 16);
-          expr = {op:token[1], length:1, 0:expr, finalToken:expr.finalToken};
+          var finalToken = expr.finalToken;
           delete expr.finalToken;
+          expr = {op:token[1], length:1, 0:expr, finalToken:finalToken};
           break;
         case '@':
           expr = {op:'@', finalToken:token};
