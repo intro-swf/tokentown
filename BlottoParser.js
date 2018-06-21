@@ -103,6 +103,7 @@ define(function() {
               throw new Error('invalid content in Blotto snippet');
             }
           }
+          expr.finalToken = token;
           break;
         default:
           if (token[1][0] === "'") {
