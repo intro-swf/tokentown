@@ -9,11 +9,11 @@ define(function() {
   const RESERVED_CHARS = '"\'#';
   const RX_TOKEN = new RegExp('(' + [
       // word
-      '(?![0-9])[^\s' + escape_rx(SINGLE_SYMBOL_CHARS + COMPOSITE_SYMBOL_CHARS + RESERVED_CHARS) + ']+'
+      '(?![0-9])[^\\s' + escape_rx(SINGLE_SYMBOL_CHARS + COMPOSITE_SYMBOL_CHARS + RESERVED_CHARS) + ']+'
       // single symbol
       ,'[' + escape_rx(SINGLE_SYMBOL_CHARS) + ']'
       // + ++ += & && &= | || |=
-      ,'([' + escape_rx('+-&|') + '])(?:\2|=)?'
+      ,'([' + escape_rx('+-&|') + '])(?:\\2|=)?'
       // / /= % %= ^ ^=
       ,'[/%^]=?'
       // * ** *= **=
@@ -25,12 +25,12 @@ define(function() {
       // ! != !==
       ,'!=?=?'
       // . [followed by uncaptured word]
-      ,'\\.(?=\s*[^0-9\s' + escape_rx(SINGLE_SYMBOL_CHARS + COMPOSITE_SYMBOL_CHARS + RESERVED_CHARS) + '])'
+      ,'\\.(?=\\s*[^0-9\\s' + escape_rx(SINGLE_SYMBOL_CHARS + COMPOSITE_SYMBOL_CHARS + RESERVED_CHARS) + '])'
       // string
       ,"'([^']+|'')*'"
       // number
-      ,'(0x[0-9a-f]+|0b[01]+|0o[0-7]+|[1-9][0-9]*(?:\.[0-9]+)?(e[+\-]?[0-9]+)?)'
-    ].join('|') + ')(\s*)', 'i');
+      ,'(0x[0-9a-f]+|0b[01]+|0o[0-7]+|[1-9][0-9]*(?:\\.[0-9]+)?(e[+\\-]?[0-9]+)?)'
+    ].join('|') + ')(\\s*)', 'i');
   
   function next_token(prev) {
     const pos = prev.index + prev[0].length;
