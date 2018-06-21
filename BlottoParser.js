@@ -4,7 +4,7 @@ define(function() {
   
   function escape_rx(v) { return v.replace(/([\[\]\(\)\{\}\.\*\+\|\\\-])/g, '\\$1'); }
   
-  const SINGLE_SYMBOL_CHARS = '@;()[]{}?:~';
+  const SINGLE_SYMBOL_CHARS = '@;,()[]{}?:~';
   const COMPOSITE_SYMBOL_CHARS = '+-*/%<>=!|&^.';
   const RESERVED_CHARS = '"\'#';
   const RX_TOKEN = new RegExp('(' + [
