@@ -60,6 +60,7 @@ define(function() {
   BlottoParser.prototype = {
     extendExpression: function(expr, minPrecedence) {
       var token = next_token(expr.finalToken);
+      if (!token) return null;
       var opPrecedence, rightAssoc;
       switch (token[1]) {
         default: return null;
