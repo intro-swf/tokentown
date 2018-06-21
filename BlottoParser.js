@@ -181,10 +181,10 @@ define(function() {
     },
     revive: function(op) {
       switch (op) {
-        case '#': return +op[1];
-        case "''": return op[1];
+        case '#': return +arguments[1];
+        case "''": return arguments[1];
       }
-      return Object.assign([].slice.apply(arguments, 1), {op:op});
+      return Object.assign([].slice.call(arguments, 1), {op:op});
     },
   };
   
