@@ -147,7 +147,7 @@ define(function() {
         case ']':
           throw new Error('invalid content in Blotto snippet');
         default:
-          if (token[1][1] === "'") {
+          if (token[1][0] === "'") {
             expr = {op:"''", value:token[1].slice(1, -1).replace(/''/g, "'"), finalToken:token};
           }
           else if (/^[0-9]/.test(token[1])) {
