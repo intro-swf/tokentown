@@ -94,13 +94,19 @@ define(function() {
           token = next_token(token, true);
           expr = ['{}'];
           if (token[1] !== '}') {
-            do {
-              var entry = this.readExpression(next_token(token, true), 0);
+            entryLoop: for (;;) {
+              var entry = this.readExpression(token, 0);
               expr.push(this.revive.apply(this, entry));
               token = next_token(entry.finalToken, true);
-            } while (token[1] === ',');
-            if (token[1] !== '}') {
-              throw new Error('invalid content in Blotto snippet');
+              switch (token[1]) {
+                case ',':
+                  token = next_token(token, true);
+                  continue entryLoop;
+                case '}':
+                  break entryLoop;
+                default:
+                  throw new Error('invalid content in Blotto snippet');
+              }
             }
           }
           expr.finalToken = token;
@@ -174,13 +180,19 @@ define(function() {
           var call = ['()', expr];
           token = next_token(token, true);
           if (token[1] !== ')') {
-            do {
-              var param = this.readExpression(next_token(token, true), 0);
-              call.push(param);
+            paramLoop: for (;;) {
+              var param = this.readExpression(token, 0);
+              call.push(this.revive.apply(this, param));
               token = next_token(param.finalToken, true);
-            } while (token[1] === ',');
-            if (token[1] !== ')') {
-              throw new Error('invalid content in Blotto snippet');
+              switch (token[1]) {
+                case ',':
+                  token = next_token(token, true);
+                  continue paramLoop;
+                case ')':
+                  break paramLoop;
+                default:
+                  throw new Error('invalid content in Blotto snippet');
+              }
             }
           }
           call.finalToken = token;
