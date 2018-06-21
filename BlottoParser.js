@@ -39,7 +39,7 @@ define(function() {
     const pos = prev.index + prev[0].length;
     if (pos >= prev.input.length) {
       if (required) {
-        throw new Error('unexpected end of snippet');
+        throw new Error('unexpected end of Blotto snippet');
       }
       return null;
     }
@@ -58,6 +58,60 @@ define(function() {
   function BlottoParser() {
   }
   BlottoParser.prototype = {
+    parse: function(src) {
+      var expr = this.readExpression(first_token(src), 0);
+      if (!expr) return null;
+      if (expr.finalToken.index + expr.finalToken[0].length < src.length) {
+        throw new Error('invalid content in Blotto snippet');
+      }
+      return this.revive.apply(this, expr);
+    },
+    readExpression: function(token, minPrecedence) {
+      var expr;
+      switch (token[1]) {
+        case '(':
+          var expr = this.readExpression(next_token(token, true), 0);
+          var endParen = next_token(expr.finalToken, true);
+          if (endParen[1] !== ')') {
+            throw new Error('invalid content in Blotto snippet');
+          }
+          expr.finalToken = endParen;
+          break;
+        case '!': case '~': case '+': case '-': case '++': case '--':
+          expr = this.readExpression(next_token(token, true), 16);
+          var finalToken = expr.finalToken;
+          expr = [token[1], this.revive.apply(this, expr)];
+          expr.finalToken = finalToken;
+          break;
+        case '@':
+          expr = Object.assign(['@'], {finalToken:token});
+          break;
+        case ')':
+        case ',':
+        case ']':
+          throw new Error('invalid content in Blotto snippet');
+        default:
+          if (token[1][0] === "'") {
+            expr = ["''", token[1].slice(1, -1).replace(/''/g, "'")];
+          }
+          else if (/^[0-9]/.test(token[1])) {
+            expr = ['#', token[1]];
+          }
+          else if (RX_WORD.test(token[1])) {
+            expr = ['(name)', token[1]];
+          }
+          else {
+            throw new Error('invalid content in Blotto snippet');
+          }
+          expr.finalToken = token;
+          break;
+      }
+      var extended;
+      while (extended = this.extendExpression(expr, minPrecedence)) {
+        expr = extended;
+      }
+      return expr;
+    },
     extendExpression: function(expr, minPrecedence) {
       var token = next_token(expr.finalToken);
       if (!token) return null;
@@ -66,17 +120,18 @@ define(function() {
         default: return null;
         case '.':
           var name = next_token(token, true);
-          return {op:'.', target:expr, name:name[1], finalToken:name};
+          expr = ['.', this.revive.apply(this, expr), name[1]];
+          expr.finalToken = name;
+          return expr;
         case '[':
-          token = next_token(token, true);
-          var index = this.readExpression(token, 0);
+          var index = this.readExpression(next_token(token, true), 0);
           token = next_token(index.finalToken, true);
-          if (token[1] !== ']') throw new Error('invalid content in snippet');
-          return {op:'[]', target:expr, index:index, finalToken:token};
+          if (token[1] !== ']') throw new Error('invalid content in Blotto snippet');
+          expr = ['[]', this.revive.apply(this, expr), this.revive.apply(this, index)];
+          expr.finalToken = token;
+          return expr;
         case '(':
-          var call = [];
-          call.op = '()';
-          call.target = expr;
+          var call = ['()', expr];
           token = next_token(token, true);
           if (token[1] !== ')') {
             do {
@@ -85,15 +140,19 @@ define(function() {
               token = next_token(param.finalToken, true);
             } while (token[1] === ',');
             if (token[1] !== ')') {
-              throw new Error('invalid content in snippet');
+              throw new Error('invalid content in Blotto snippet');
             }
           }
           call.finalToken = token;
           return call;
         case '!':
-          return {op:'@!', target:expr, finalToken:token};
+          expr = ['@!', this.revive.apply(this, expr)];
+          expr.finalToken = token;
+          return expr;
         case '++': case '--':
-          return {op:token[1], target:expr, finalToken:token};
+          expr = [token[1], this.revive.apply(this, expr)];
+          expr.finalToken = token;
+          return expr;
         case '**': opPrecedence = 15; rightAssoc = true; break;
         case '*': case '/': case '%': opPrecedence = 14; break;
         case '+': case '-': opPrecedence = 13; break;
@@ -116,66 +175,16 @@ define(function() {
       var rhs = this.readExpression(
         next_token(token, true),
         rightAssoc ? opPrecedence : opPrecedence+1);
-      var binop = {op:token[1], left:expr, right:rhs, finalToken:rhs.finalToken};
-      delete expr.finalToken;
-      delete rhs.finalToken;
-      return binop;
-    },
-    readExpression: function(token, minPrecedence) {
-      var expr;
-      switch (token[1]) {
-        case '(':
-          token = next_token(token, true);
-          var expr = this.readExpression(token, 0);
-          var endParen = next_token(expr.finalToken, true);
-          if (endParen[1] !== ')') {
-            throw new Error('unclosed parenthesis');
-          }
-          expr.finalToken = endParen;
-          break;
-        case '!': case '~': case '+': case '-': case '++': case '--':
-          var operandToken = next_token(token, true);
-          expr = this.readExpression(operandToken, 16);
-          var finalToken = expr.finalToken;
-          delete expr.finalToken;
-          expr = {op:token[1], length:1, 0:expr, finalToken:finalToken};
-          break;
-        case '@':
-          expr = {op:'@', finalToken:token};
-          break;
-        case ')':
-        case ',':
-        case ']':
-          throw new Error('invalid content in Blotto snippet');
-        default:
-          if (token[1][0] === "'") {
-            expr = {op:"''", value:token[1].slice(1, -1).replace(/''/g, "'"), finalToken:token};
-          }
-          else if (/^[0-9]/.test(token[1])) {
-            expr = {op:'#', value:token[1], finalToken:token};
-          }
-          else if (RX_WORD.test(token[1])) {
-            expr = {op:'(name)', name:token[1], finalToken:token};
-          }
-          else {
-            throw new Error('invalid content in snippet');
-          }
-          break;
-      }
-      var extended;
-      while (extended = this.extendExpression(expr, minPrecedence)) {
-        expr = extended;
-      }
+      expr = [token[1], this.revive.apply(this, expr), this.revive.apply(this, rhs)];
+      expr.finalToken = rhs.finalToken;
       return expr;
     },
-    parse: function(src) {
-      var expr = this.readExpression(first_token(src), 0);
-      if (!expr) return null;
-      if (expr.finalToken.index + expr.finalToken[0].length < src.length) {
-        throw new Error('invalid content in Blotto snippet');
+    revive: function(op) {
+      switch (op) {
+        case '#': return +op[1];
+        case "''": return op[1];
       }
-      delete expr.finalToken;
-      return expr;
+      return Object.assign([].slice.apply(arguments, 1), {op:op});
     },
   };
   
