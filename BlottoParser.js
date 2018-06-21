@@ -95,7 +95,7 @@ define(function() {
           expr = ['{}'];
           if (token[1] !== '}') {
             do {
-              var entry = this.readExpression(token, 0);
+              var entry = this.readExpression(next_token(token, true), 0);
               expr.push(this.revive.apply(this, entry));
               token = next_token(entry.finalToken, true);
             } while (token[1] === ',');
@@ -175,7 +175,7 @@ define(function() {
           token = next_token(token, true);
           if (token[1] !== ')') {
             do {
-              var param = this.readExpression(token, 0);
+              var param = this.readExpression(next_token(token, true), 0);
               call.push(param);
               token = next_token(param.finalToken, true);
             } while (token[1] === ',');
