@@ -80,7 +80,7 @@ define(function() {
         case '!': case '~': case '+': case '-': case '++': case '--':
           expr = this.readExpression(next_token(token, true), 16);
           var finalToken = expr.finalToken;
-          expr = [token[1], this.revive.apply(this, expr)];
+          expr = [token[1]+'@', this.revive.apply(this, expr)];
           expr.finalToken = finalToken;
           break;
         case '@':
@@ -97,7 +97,7 @@ define(function() {
           else if (/^[0-9]/.test(token[1])) {
             var literal = token[1];
             // immediately followed by a valid word: suffix
-            if (token[0] === token[1] && RX_WORD.test(token.input.substr(token.index + token[0].length, 1))) {
+            if (token[0] === token[1] && RX_WORD.test(token.input[token.index + token[0].length] || '')) {
               token = next_token(token, true);
               expr = ['#' + token[1], literal];
             }
@@ -106,7 +106,14 @@ define(function() {
             }
           }
           else if (RX_WORD.test(token[1])) {
-            expr = ['(name)', token[1]];
+            if (token.input[token.index + token[1].length]] === "'") {
+              var prefix = token[1];
+              token = next_token(token, true);
+              expr = [prefix + "''", token[1].slice(1, -1).replace(/''/g, "'")];
+            }
+            else {
+              expr = ['(name)', token[1]];
+            }
           }
           else {
             throw new Error('invalid content in Blotto snippet');
