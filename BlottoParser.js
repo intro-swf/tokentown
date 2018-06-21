@@ -65,7 +65,7 @@ define(function() {
       switch (token[1]) {
         default: return null;
         case '.':
-          var name = next_token(expr.finalToken);
+          var name = next_token(token, true);
           return {op:'.', target:expr, name:name[1], finalToken:name};
         case '[':
           token = next_token(token, true);
