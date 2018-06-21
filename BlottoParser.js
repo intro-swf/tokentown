@@ -2,7 +2,7 @@ define(function() {
 
   'use strict';
   
-  function escape_rx(v) { return v.replace(/([\[\]\(\)\{\}\.\*\+\|\\])/g, '\\$1'); }
+  function escape_rx(v) { return v.replace(/([\[\]\(\)\{\}\.\*\+\|\\\-])/g, '\\$1'); }
   
   const SINGLE_SYMBOL_CHARS = '@;()[]{}?:~';
   const COMPOSITE_SYMBOL_CHARS = '+-*/%<>=!|&^.';
