@@ -235,8 +235,8 @@ define(function() {
       switch (op) {
         case '#': return +arguments[1];
         case "''": return arguments[1];
-        case ';':
-          if (Array.isArray(arguments[1]) && arguments[1].op === ';') {
+        case ';': case '&&': case '||': case '+': case '^': case '|': case '&':
+          if (Array.isArray(arguments[1]) && arguments[1].op === op) {
             arguments[1].push(arguments[2]);
             return arguments[1];
           }
