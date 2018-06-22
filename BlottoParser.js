@@ -126,14 +126,14 @@ define(function() {
           }
           else if (/^[0-9]/.test(token[1])) {
             var literal = token[1];
+            expr = ['#', literal];
             // immediately followed by a word other than e/E/p/P: suffix
-            if (token[0] === token[1]
-                && RX_WORD.test(token.input[token.index + token[0].length] || '')
-                && !/^[ep]$/i.test(token[1])) {
-              expr = ['#'+token[1], literal];
-            }
-            else {
-              expr = ['#', literal];
+            if (RX_WORD.test(token.input[token.index + token[1].length] || '')) {
+              var suffix = next_token(token, true);
+              if (!/^[ep]$/i.test(suffix[1])) {
+                expr[0] += suffix[1];
+                token = suffix;
+              }
             }
           }
           else if (RX_WORD.test(token[1])) {
