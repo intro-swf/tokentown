@@ -175,18 +175,18 @@ define(function() {
         default: return null;
         case '.':
           var name = next_token(token, true);
-          expr = ['.', this.revive.apply(this, expr), name[1]];
+          expr = ['@.(name)', this.revive.apply(this, expr), name[1]];
           expr.finalToken = name;
           return expr;
         case '[':
           var index = this.readExpression(next_token(token, true), 0);
           token = next_token(index.finalToken, true);
           if (token[1] !== ']') throw new Error('invalid content in Blotto snippet');
-          expr = ['[]', this.revive.apply(this, expr), this.revive.apply(this, index)];
+          expr = ['@[@]', this.revive.apply(this, expr), this.revive.apply(this, index)];
           expr.finalToken = token;
           return expr;
         case '(':
-          var call = ['()', this.revive.apply(this, expr)];
+          var call = ['@()', this.revive.apply(this, expr)];
           token = next_token(token, true);
           if (token[1] !== ')') {
             paramLoop: for (;;) {
@@ -211,7 +211,7 @@ define(function() {
           expr.finalToken = token;
           return expr;
         case '++': case '--':
-          expr = [token[1], this.revive.apply(this, expr)];
+          expr = ['@' + token[1], this.revive.apply(this, expr)];
           expr.finalToken = token;
           return expr;
         case '**': opPrecedence = 15; rightAssoc = true; break;
@@ -236,7 +236,7 @@ define(function() {
       var rhs = this.readExpression(
         next_token(token, true),
         rightAssoc ? opPrecedence : opPrecedence+1);
-      expr = ['@ '+token[1]+' @', this.revive.apply(this, expr), this.revive.apply(this, rhs)];
+      expr = ['@'+token[1]+'@', this.revive.apply(this, expr), this.revive.apply(this, rhs)];
       expr.finalToken = rhs.finalToken;
       return expr;
     },
