@@ -78,7 +78,7 @@ define(function() {
           expr.finalToken = endParen;
           break;
         case '+': case '-':
-          if (/[0-9]/.test(token.input[token[0].length] || '')) {
+          if (/[0-9]/.test(token.input[token.index + token[0].length] || '')) {
             expr = this.readExpression(next_token(token, true), 16);
             if (token[1] === '-') {
               expr[1] = '-' + expr[1];
