@@ -77,7 +77,16 @@ define(function() {
           }
           expr.finalToken = endParen;
           break;
-        case '!': case '~': case '+': case '-': case '++': case '--':
+        case '+': case '-':
+          if (/[0-9]/.test(token.input[token[0].length] || '')) {
+            expr = this.readExpression(next_token(token, true), 16);
+            if (token[1] === '-') {
+              expr[1] = '-' + expr[1];
+            }
+            break;
+          }
+          // fall through:
+        case '!': case '~': case '++': case '--':
           expr = this.readExpression(next_token(token, true), 16);
           var finalToken = expr.finalToken;
           expr = [token[1]+'@', this.revive.apply(this, expr)];
@@ -227,7 +236,7 @@ define(function() {
       var rhs = this.readExpression(
         next_token(token, true),
         rightAssoc ? opPrecedence : opPrecedence+1);
-      expr = [token[1], this.revive.apply(this, expr), this.revive.apply(this, rhs)];
+      expr = ['@ '+token[1]+' @', this.revive.apply(this, expr), this.revive.apply(this, rhs)];
       expr.finalToken = rhs.finalToken;
       return expr;
     },
