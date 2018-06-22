@@ -98,17 +98,20 @@ define(function() {
         case ')':
         case ',':
         case ']':
+        case '}':
           throw new Error('invalid content in Blotto snippet');
         case '{':
           token = next_token(token, true);
           expr = ['{}'];
           if (token[1] !== '}') {
             entryLoop: for (;;) {
-              var entry = this.readExpression(token, 0);
+              var entry = this.readExpression(token, 2);
               expr.push(this.revive.apply(this, entry));
               token = next_token(entry.finalToken, true);
               switch (token[1]) {
                 case ',':
+                  throw new Error('commas are not supported inside {} tracts, use semicolons instead');
+                case ';':
                   token = next_token(token, true);
                   continue entryLoop;
                 case '}':
@@ -190,10 +193,12 @@ define(function() {
           token = next_token(token, true);
           if (token[1] !== ')') {
             paramLoop: for (;;) {
-              var param = this.readExpression(token, 0);
+              var param = this.readExpression(token, 2);
               call.push(this.revive.apply(this, param));
               token = next_token(param.finalToken, true);
               switch (token[1]) {
+                case ';':
+                  throw new Error('semicolon not allowed directly in call parameters, try wrapping inside parentheses');
                 case ',':
                   token = next_token(token, true);
                   continue paramLoop;
