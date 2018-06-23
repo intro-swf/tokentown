@@ -297,8 +297,14 @@ define(function() {
       }
       if (op === '@[@]') {
         if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
+          if (b === b|0) {
+            return [a[0] + '['+b+']'];
+          }
           return [a[0] + '[@]', b];
-        }        
+        }
+        if (b === b|0) {
+          return ['@['+b+']', a];
+        }
         return ['@[@]', a, b];
       }
       if (op === '') {
