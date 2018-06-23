@@ -59,7 +59,7 @@ define(function() {
     RX_SCOOP_PART.lastIndex = start;
     for (var match = RX_SCOOP_PART.exec(src); match; match = RX_SCOOP_PART.exec(src)) {
       if (match.index !== prev.index + prev[0].length) {
-        throw new Error('invalid content in Blotto snippet');
+        break;
       }
       switch (match[0][0]) {
         case '{': ++depth; break;
@@ -77,7 +77,8 @@ define(function() {
       }
       prev = match;
     }
-    if (prev.index + prev[0].length < src.length) {
+    if (prev.index + prev[0].length < src.length
+        && src[prev.index + prev[0].length] !== "'") {
       throw new Error('invalid content in Blotto snippet');
     }
     throw new Error('unexpected end of Blotto snippet');
