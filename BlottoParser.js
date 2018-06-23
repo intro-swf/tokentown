@@ -4,7 +4,7 @@ define(function() {
   
   function escape_rx(v) { return v.replace(/([\[\]\(\)\{\}\.\*\+\|\\\-])/g, '\\$1'); }
   
-  const SINGLE_SYMBOL_CHARS = '@;,()[]{}?:~';
+  const SINGLE_SYMBOL_CHARS = ';,()[]{}?:~';
   const COMPOSITE_SYMBOL_CHARS = '+-*/%<>=!|&^.';
   const RESERVED_CHARS = '"\'#';
   const RX_WORD = new RegExp(
@@ -91,9 +91,6 @@ define(function() {
           var finalToken = expr.finalToken;
           expr = [token[1]+'@', this.revive.apply(this, expr)];
           expr.finalToken = finalToken;
-          break;
-        case '@':
-          expr = Object.assign(['@'], {finalToken:token});
           break;
         case ')':
         case ',':
@@ -211,10 +208,6 @@ define(function() {
           }
           call.finalToken = token;
           return call;
-        case '!':
-          expr = ['@!', this.revive.apply(this, expr)];
-          expr.finalToken = token;
-          return expr;
         case '++': case '--':
           expr = ['@' + token[1], this.revive.apply(this, expr)];
           expr.finalToken = token;
