@@ -286,10 +286,10 @@ define(function() {
       if (op === '') {
         return [];
       }
-      if (arguments.length === 1) {
+      if (arguments.length === 2) {
         return {op:op, v:a};
       }
-      if (arguments.length === 2) {
+      if (arguments.length === 3) {
         return {op:op, a:a, b:b};
       }
       throw new Error('unrecognized op');
