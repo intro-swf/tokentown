@@ -251,18 +251,48 @@ define(function() {
       expr.finalToken = rhs.finalToken;
       return expr;
     },
-    revive: function(op) {
-      switch (op) {
-        case '#': return +arguments[1];
-        case "''": return arguments[1];
-        case ';': case '&&': case '||': case '+': case '^': case '|': case '&':
-          if (Array.isArray(arguments[1]) && arguments[1].op === op) {
-            arguments[1].push(arguments[2]);
-            return arguments[1];
-          }
-          break;
+    revive: function(op, a, b) {
+      var match;
+      if (match = op.match(/^#(.+)?$/)) {
+        return match[1] ? {op:op, literal:a} : +a;
       }
-      return Object.assign([].slice.call(arguments, 1), {op:op});
+      if (match = op.match(/^(.+)?''$/)) {
+        return match[1] ? {op:op, text:a} : a;
+      }
+      if (match = op.match(/^(.+)\{\}$/)) {
+        var content = this.parse(a);
+        if (!Array.isArray(content)) content = [content];
+        return {op:op, content:content};
+      }
+      if (op === '@()') {
+        if (arguments.length > 2) {
+          return {op:op, fn:a, args:[].slice.apply(arguments, 2)};
+        }
+        return {op:op, fn:a};
+      }
+      if (op === '@;@') {
+        if (Array.isArray(a)) {
+          a.push(b);
+          return a;
+        }
+        return [a, b];
+      }
+      if (op === '@.(name)') {
+        return {op:'.', o:a, k:b};
+      }
+      if (op === '@[@]') {
+        return {op:'[]', o:a, k:b};
+      }
+      if (op === '') {
+        return [];
+      }
+      if (arguments.length === 1) {
+        return {op:op, v:a};
+      }
+      if (arguments.length === 2) {
+        return {op:op, a:a, b:b};
+      }
+      throw new Error('unrecognized op');
     },
   };
   
