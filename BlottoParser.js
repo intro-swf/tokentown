@@ -279,7 +279,7 @@ define(function() {
           }
         }
         var call = [].slice.apply(arguments);
-        call.splice(0, 0, '@(' + Array.fill(new Array(arguments.length-1), '@').join(', ') + ')');
+        call.splice(0, 0, '@(' + new Array(arguments.length-1).fill('@').join(', ') + ')');
         return call;
       }
       if (op === '@;@') {
