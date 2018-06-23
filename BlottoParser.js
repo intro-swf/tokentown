@@ -51,8 +51,8 @@ define(function() {
   
   function next_scoop(prev) {
     const src = prev.input;
-    const start = prev.index + prev[0].length + 1;
-    if (src[start - 1] !== '{') {
+    const start = prev.index + prev[0].length;
+    if (src[start] !== '{') {
       throw new Error('no scoop found');
     }
     var depth = 0;
