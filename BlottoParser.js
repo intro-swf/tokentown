@@ -160,9 +160,12 @@ define(function() {
                 token = expr.finalToken;
                 break;
               case '{':
-                var scoop = next_scoop(token, true);
-                expr = [token[1] + '{}', scoop[1]];
-                token = scoop;
+                var expr = [token[1] + '{}'];
+                do {
+                  var scoop = next_scoop(token, true);
+                  expr.push(scoop[1]);
+                  token = scoop;
+                } while (token.input[token.index + token[0].length] === '{');
                 break;
               default:
                 expr = ['(name)', token[1]];
@@ -262,10 +265,28 @@ define(function() {
         return match[1] ? [a] : a;
       }
       if (match = op.match(/^(.+)\{\}$/)) {
-        var content = this.parse(a);
-        if (!Array.isArray(content)) content = ['@', content];
-        else if (content.length === 0) return [op];
-        return [op.slice(0, -1) + ':', content];
+        var sections = [].slice.call(arguments, 1);
+        var anyFailed = false;
+        for (var i = 0; i < sections.length; i++) {
+          try {
+            sections[i] = this.parse(sections[i]);
+            if (!Array.isArray(sections[i]) || (sections[i].length > 0 && !Array.isArray(sections[i][0]))) {
+              sections[i] = [sections[i]];
+            }
+          }
+          catch (e) {
+            anyFailed = true;
+          }
+        }
+        if (!anyFailed && sections.length === 1) {
+          if (sections[0].length === 0) {
+            return [op];
+          }
+          sections[0].splice(0, 0, op.slice(0, -1) + ':');
+          return sections[0];
+        }
+        sections.splice(0, 0, op.replace(/\\{\\}$/, new Array(sections.length).fill(' {@@}').join('')));
+        return sections;
       }
       if (op === '@()') {
         if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
@@ -278,9 +299,11 @@ define(function() {
             return call;
           }
         }
-        var call = [].slice.call(arguments, 1);
-        call.splice(0, 0, '@(' + new Array(arguments.length-1).fill('@').join(', ') + ')');
-        return call;
+        switch (arguments.length) {
+          case 1: return ['@()', a];
+          case 2: return ['@(@)', a, b];
+          default: return ['@(@@)', a, [].slice.call(arguments, 1)];
+        }
       }
       if (op === '@;@') {
         if (Array.isArray(a) && (a.length === 0 || Array.isArray(a[0]))) {
