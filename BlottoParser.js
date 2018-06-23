@@ -304,6 +304,9 @@ define(function() {
       if (op === '') {
         return [];
       }
+      if (op === '(name)') {
+        return [a];
+      }
       if (arguments.length === 2) {
         return [op,  a];
       }
