@@ -273,12 +273,12 @@ define(function() {
             return [a[0] + '()'];
           }
           else {
-            var call = [].slice.apply(arguments, 2);
+            var call = [].slice.call(arguments, 2);
             call.splice(0, 0, a[0] + '(:');
             return call;
           }
         }
-        var call = [].slice.apply(arguments);
+        var call = [].slice.call(arguments, 1);
         call.splice(0, 0, '@(' + new Array(arguments.length-1).fill('@').join(', ') + ')');
         return call;
       }
