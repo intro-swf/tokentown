@@ -2,21 +2,15 @@ define(function() {
 
   'use strict';
   
-  function escape_rx(v) { return v.replace(/([\[\]\(\)\{\}\.\*\+\|\\\-])/g, '\\$1'); }
-  
-  const SINGLE_SYMBOL_CHARS = ';,()[]{}?:~';
-  const COMPOSITE_SYMBOL_CHARS = '+-*/%<>=!|&^.';
-  const RESERVED_CHARS = '"\'#';
-  const RX_WORD = new RegExp(
-    '^(?![0-9])[^\\s' + escape_rx(SINGLE_SYMBOL_CHARS + COMPOSITE_SYMBOL_CHARS + RESERVED_CHARS) + ']+$'
-  );
+  const RXS_WORD = '(?![0-9])((?:[A-Za-z0-9_$@]|[^\\x00-\\xFF])+)';
+  const RX_WORD = new RegExp('^' + RXS_WORD + '$');
   const RX_TOKEN = new RegExp('(' + [
       // word
-      '(?![0-9])[^\\s' + escape_rx(SINGLE_SYMBOL_CHARS + COMPOSITE_SYMBOL_CHARS + RESERVED_CHARS) + ']+'
+      RXS_WORD
       // single symbol
-      ,'[' + escape_rx(SINGLE_SYMBOL_CHARS) + ']'
+      ,'[\\[\\];,(){}~]'
       // + ++ += & && &= | || |=
-      ,'([' + escape_rx('+-&|') + '])(?:\\2|=)?'
+      ,'([\\-+&|])(?:\\2|=)?'
       // / /= % %= ^ ^=
       ,'[/%^]=?'
       // * ** *= **=
@@ -28,7 +22,7 @@ define(function() {
       // ! != !== = == ===
       ,'[!=]=?=?'
       // . [followed by uncaptured word]
-      ,'\\.(?=\\s*[^0-9\\s' + escape_rx(SINGLE_SYMBOL_CHARS + COMPOSITE_SYMBOL_CHARS + RESERVED_CHARS) + '])'
+      ,'\\.(?=\\s*' + RXS_WORD + ')'
       // string
       ,"'([^']+|'')*'"
       // number
