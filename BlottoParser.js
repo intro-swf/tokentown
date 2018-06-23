@@ -8,7 +8,7 @@ define(function() {
       // word
       RXS_WORD
       // single symbol
-      ,'[\\[\\];,(){}~]'
+      ,'[\\[\\];,()~]'
       // + ++ += & && &= | || |=
       ,'([\\-+&|])(?:\\2|=)?'
       // * *= ** **= / /= // //=
@@ -45,6 +45,39 @@ define(function() {
       throw new Error('invalid content in Blotto snippet');
     }
     return token;
+  }
+  
+  const RX_SCOOP_PART = /[^{}'\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]+|[{}]\s*|'[^']*'/g;
+  
+  function next_scoop(prev) {
+    const src = prev.input;
+    const start = prev.index + prev[0].length + 1;
+    if (src[start - 1] !== '{') {
+      throw new Error('no scoop found');
+    }
+    var depth = 0;
+    RX_SCOOP_PART.lastIndex = start;
+    for (var match = RX_SCOOP_PART.exec(src); match; match = RX_SCOOP_PART.exec(src)) {
+      if (match.index !== prev.index + prev[0].length) {
+        throw new Error('invalid content in Blotto snippet');
+      }
+      switch (match[0][0]) {
+        case '{': ++depth; break;
+        case '}':
+          if (--depth < 1) {
+            var final = [
+              src.slice(start, match.index + match[0].length),
+              src.slice(start+1, match.index)
+            ];
+            final.input = src;
+            final.index = start;
+            return final;
+          }
+          break;
+      }
+      prev = match;
+    }
+    throw new Error('unexpected end of Blotto snippet');
   }
   
   function first_token(src) {
@@ -93,29 +126,6 @@ define(function() {
         case ']':
         case '}':
           throw new Error('invalid content in Blotto snippet');
-        case '{':
-          token = next_token(token, true);
-          expr = ['{}'];
-          if (token[1] !== '}') {
-            entryLoop: for (;;) {
-              var entry = this.readExpression(token, 2);
-              expr.push(this.revive.apply(this, entry));
-              token = next_token(entry.finalToken, true);
-              switch (token[1]) {
-                case ',':
-                  throw new Error('commas are not supported inside {} tracts, use semicolons instead');
-                case ';':
-                  token = next_token(token, true);
-                  continue entryLoop;
-                case '}':
-                  break entryLoop;
-                default:
-                  throw new Error('invalid content in Blotto snippet');
-              }
-            }
-          }
-          expr.finalToken = token;
-          break;
         default:
           if (token[1][0] === "'") {
             expr = ["''", token[1].slice(1, -1).replace(/''/g, "'")];
@@ -125,6 +135,7 @@ define(function() {
             expr = ['#', literal];
             // immediately followed by a word other than e/E/p/P: suffix
             if (RX_WORD.test(token.input[token.index + token[1].length] || '')) {
+
               var suffix = next_token(token, true);
               if (!/^[ep]$/i.test(suffix[1])) {
                 expr[0] += suffix[1];
@@ -133,18 +144,19 @@ define(function() {
             }
           }
           else if (RX_WORD.test(token[1])) {
-            switch (token.input[token.index + token[1].length]) {
+            switch (token.input[token.index + token[0].length]) {
               case "'":
+                if (token[0] !== token[1]) {
+                  throw new Error('whitespace after a string literal prefix is not permitted');
+                }
                 expr = this.readExpression(next_token(token, true), Infinity);
                 expr[0] = token[1] + "''";
                 token = expr.finalToken;
                 break;
               case '{':
-                this.enter(token[1]+'{}');
-                expr = this.readExpression(next_token(token, true), Infinity);
-                expr[0] = token[1] + "{}";
-                token = expr.finalToken;                
-                this.leave(token[1]+'{}');
+                var scoop = next_scoop(token, true);
+                expr = [token[1] + '{}', scoop[1]];
+                token = scoop;
                 break;
               default:
                 expr = ['(name)', token[1]];
@@ -247,10 +259,6 @@ define(function() {
           break;
       }
       return Object.assign([].slice.call(arguments, 1), {op:op});
-    },
-    enter: function(mode) {
-    },
-    leave: function(mode) {
     },
   };
   
