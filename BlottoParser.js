@@ -77,6 +77,9 @@ define(function() {
       }
       prev = match;
     }
+    if (prev.index + prev[0].length < src.length) {
+      throw new Error('invalid content in Blotto snippet');
+    }
     throw new Error('unexpected end of Blotto snippet');
   }
   
