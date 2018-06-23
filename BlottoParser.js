@@ -262,10 +262,9 @@ define(function() {
       }
       if (match = op.match(/^(.+)\{\}$/)) {
         var content = this.parse(a);
-        if (!Array.isArray(content)) content = [content];
-        if (content.length === 0) return [op];
-        content.splice(0, 0, op.slice(0, -1) + ':');
-        return content;
+        if (!Array.isArray(content)) content = ['@', content];
+        else if (content.length === 0) return [op];
+        return [op.slice(0, -1) + ':', content];
       }
       if (op === '@()') {
         if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
