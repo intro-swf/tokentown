@@ -4,6 +4,7 @@ define(function() {
   
   const RXS_WORD = '(?![0-9])((?:[A-Za-z0-9_$@]|[^\\x00-\\xFF])+)';
   const RX_WORD = new RegExp('^' + RXS_WORD + '$');
+  const RX_WORD_CHAIN = new RegExp('^' + RXS_WORD + '(?:\.' + RXS_WORD + ')*$');
   const RX_TOKEN = new RegExp('(' + [
       // word
       RXS_WORD
@@ -254,43 +255,60 @@ define(function() {
     revive: function(op, a, b) {
       var match;
       if (match = op.match(/^#(.+)?$/)) {
-        return match[1] ? {op:op, literal:a} : +a;
+        return match[1] ? [a] : +a;
       }
       if (match = op.match(/^(.+)?''$/)) {
-        return match[1] ? {op:op, text:a} : a;
+        return match[1] ? [a] : a;
       }
       if (match = op.match(/^(.+)\{\}$/)) {
         var content = this.parse(a);
         if (!Array.isArray(content)) content = [content];
-        return {op:op, content:content};
+        if (content.length === 0) return [op];
+        content.splice(0, 0, op.slice(0, -1) + ':');
+        return content;
       }
       if (op === '@()') {
-        if (arguments.length > 2) {
-          return {op:op, fn:a, args:[].slice.apply(arguments, 2)};
+        if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
+          if (arguments.length === 2) {
+            return [a[0] + '()'];
+          }
+          else {
+            var call = [].slice.apply(arguments);
+            call[0] = a[0] + '(:';
+            return call;
+          }
         }
-        return {op:op, fn:a};
+        var call = [].slice.apply(arguments);
+        call.splice(0, 0, '@(' + Array.fill(new Array(arguments.length-1), '@').join(', ') + ')');
+        return call;
       }
       if (op === '@;@') {
-        if (Array.isArray(a)) {
+        if (Array.isArray(a) && (a.length === 0 || Array.isArray(a[0]))) {
           a.push(b);
           return a;
         }
         return [a, b];
       }
       if (op === '@.(name)') {
-        return {op:'.', o:a, k:b};
+        if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
+          return [a[0] + '.' + b];
+        }
+        return ['@.' + b, a];
       }
       if (op === '@[@]') {
-        return {op:'[]', o:a, k:b};
+        if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
+          return [a[0] + '[@]', b];
+        }        
+        return ['@[@]', a, b];
       }
       if (op === '') {
         return [];
       }
       if (arguments.length === 2) {
-        return {op:op, v:a};
+        return [op,  a];
       }
       if (arguments.length === 3) {
-        return {op:op, a:a, b:b};
+        return [op, a, b];
       }
       throw new Error('unrecognized op');
     },
