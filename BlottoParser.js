@@ -11,10 +11,10 @@ define(function() {
       ,'[\\[\\];,(){}~]'
       // + ++ += & && &= | || |=
       ,'([\\-+&|])(?:\\2|=)?'
-      // / /= % %= ^ ^=
-      ,'[/%^]=?'
-      // * ** *= **=
-      ,'\\*\\*?=?'
+      // * *= ** **= / /= // //=
+      ,'([\\*/])\\3?=?'
+      // % %= ^ ^=
+      ,'[%^]=?'
       // < <= << <<=
       ,'<<?=?'
       // > >= >> >>= >>> >>>=
@@ -23,6 +23,8 @@ define(function() {
       ,'[!=]=?=?'
       // . [followed by uncaptured word]
       ,'\\.(?=\\s*' + RXS_WORD + ')'
+      // ..
+      ,'\\.\\.'
       // string
       ,"'([^']+|'')*'"
       // number
@@ -207,8 +209,9 @@ define(function() {
           expr.finalToken = token;
           return expr;
         case '**': opPrecedence = 15; rightAssoc = true; break;
-        case '*': case '/': case '%': opPrecedence = 14; break;
+        case '*': case '/': case '%': case '//': opPrecedence = 14; break;
         case '+': case '-': opPrecedence = 13; break;
+        case '..': opPrecedence = 12.5; break;
         case '<<': case '>>': case '>>>': opPrecedence = 12; break;
         case '<': case '<=': case '>': case '>=': opPrecedence = 11; break;
         case '==': case '===': case '!=': case '!==': opPrecedence = 10; break;
@@ -217,7 +220,7 @@ define(function() {
         case '|': opPrecedence = 7; break;
         case '&&': opPrecedence = 6; break;
         case '||': opPrecedence = 5; break;
-        case '=': case '+=': case '-=': case '**=': case '*=': case '/=': case '%=':
+        case '=': case '+=': case '-=': case '*=': case '**=': case '/=': case '//=': case '%=':
         case '<<=': case '>>=': case '>>>=': case '&=': case '^=': case '|=':
           opPrecedence = 3;
           rightAssoc = true;
@@ -227,7 +230,7 @@ define(function() {
       if (minPrecedence > opPrecedence) return null;
       var rhs = this.readExpression(
         next_token(token, true),
-        rightAssoc ? opPrecedence : opPrecedence+1);
+        rightAssoc ? opPrecedence : opPrecedence+0.5);
       expr = ['@'+token[1]+'@', this.revive.apply(this, expr), this.revive.apply(this, rhs)];
       expr.finalToken = rhs.finalToken;
       return expr;
