@@ -93,8 +93,9 @@ define(function() {
   }
   BlottoParser.prototype = {
     parse: function(src) {
-      var expr = this.readExpression(first_token(src), 0);
-      if (!expr) return null;
+      var first = first_token(src);
+      if (!first) return this.revive('');
+      var expr = this.readExpression(first, 0);
       if (expr.finalToken.index + expr.finalToken[0].length < src.length) {
         throw new Error('invalid content in Blotto snippet');
       }
