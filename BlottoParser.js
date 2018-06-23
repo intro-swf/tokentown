@@ -273,8 +273,8 @@ define(function() {
             return [a[0] + '()'];
           }
           else {
-            var call = [].slice.apply(arguments);
-            call[0] = a[0] + '(:';
+            var call = [].slice.apply(arguments, 2);
+            call.splice(0, 0, a[0] + '(:');
             return call;
           }
         }
