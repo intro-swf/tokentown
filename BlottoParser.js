@@ -105,12 +105,18 @@ define(function() {
       var expr;
       switch (token[1]) {
         case '(':
-          var expr = this.readExpression(next_token(token, true), 0);
-          var endParen = next_token(expr.finalToken, true);
-          if (endParen[1] !== ')') {
-            throw new Error('invalid content in Blotto snippet');
+          if (token.input[token.index + token[0].length] === ')') {
+            expr = [''];
+            expr.finalToken = next_token(token, true);
           }
-          expr.finalToken = endParen;
+          else {
+            expr = this.readExpression(next_token(token, true), 0);
+            var endParen = next_token(expr.finalToken, true);
+            if (endParen[1] !== ')') {
+              throw new Error('invalid content in Blotto snippet');
+            }
+            expr.finalToken = endParen;
+          }
           break;
         case '+': case '-':
           if (/[0-9]/.test(token.input[token.index + token[0].length] || '')) {
@@ -127,6 +133,15 @@ define(function() {
           expr = [token[1]+'@', this.revive.apply(this, expr)];
           expr.finalToken = finalToken;
           break;
+        case ';':
+          if (minPrecedence <= 1) {
+            expr = [''];
+            expr.finalToken = ['', ''];
+            expr.finalToken.input = token.input;
+            expr.finalToken.index = token.index;
+            break;
+          }
+          // fall through:
         case ')':
         case ',':
         case ']':
@@ -227,15 +242,30 @@ define(function() {
           var call = ['@()', this.revive.apply(this, expr)];
           token = next_token(token, true);
           if (token[1] !== ')') {
+            if (token[1] === ';') {
+              throw new Error('semicolon not permitted directly in parameter list, try wrapping in (...)');
+            }
             paramLoop: for (;;) {
+              while (token[1] === ',') {
+                call.push(this.revive(''));
+                token = next_token(token, true);
+                if (token[1] === ')') {
+                  call.push(this.revive(''));
+                  break paramLoop;
+                }
+              }
               var param = this.readExpression(token, 2);
               call.push(this.revive.apply(this, param));
               token = next_token(param.finalToken, true);
               switch (token[1]) {
                 case ';':
-                  throw new Error('semicolon not allowed directly in call parameters, try wrapping inside parentheses');
+                  throw new Error('semicolon not permitted directly in parameter list, try wrapping in (...)');
                 case ',':
                   token = next_token(token, true);
+                  if (token[1] === ')') {
+                    call.push(this.revive(''));
+                    break paramLoop;
+                  }
                   continue paramLoop;
                 case ')':
                   break paramLoop;
