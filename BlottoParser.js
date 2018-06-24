@@ -95,7 +95,17 @@ define(function() {
     parse: function(src) {
       var first = first_token(src);
       if (!first) return this.revive('');
-      var expr = this.readExpression(first, 0);
+      var expr;
+      if (first[1] === ';') {
+        expr = [''];
+        expr.finalToken = ['', ''];
+        expr.finalToken.index = first.index;
+        expr.finalToken.input = first.input;
+        expr = this.extendExpression(expr, 0);
+      }
+      else {
+        expr = this.readExpression(first, 0);
+      }
       if (expr.finalToken.index + expr.finalToken[0].length < src.length) {
         throw new Error('invalid content in Blotto snippet');
       }
@@ -133,15 +143,6 @@ define(function() {
           expr = [token[1]+'@', this.revive.apply(this, expr)];
           expr.finalToken = finalToken;
           break;
-        case ';':
-          if (minPrecedence <= 1) {
-            expr = [''];
-            expr.finalToken = ['', ''];
-            expr.finalToken.input = token.input;
-            expr.finalToken.index = token.index;
-            break;
-          }
-          // fall through:
         case ')':
         case ',':
         case ']':
@@ -298,9 +299,10 @@ define(function() {
           rightAssoc = true;
           break;
         case ';':
-          if (/^\)?$/.test(token.input[token.index + token[0].length] || '')) {
+          if (minPrecedence > 1) return null;
+          if (/^[);]?$/.test(token.input[token.index + token[0].length] || '')) {
             expr = ['@;@', this.revive.apply(this, expr), this.revive('')];
-            expr.finaToken = token;
+            expr.finalToken = token;
             return expr;
           }
           opPrecedence = 1;
