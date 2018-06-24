@@ -366,7 +366,7 @@ define(function() {
         }
       }
       if (op === '@;@') {
-        if (Array.isArray(a) && (a.length === 0 || Array.isArray(a[0]))) {
+        if (Array.isArray(a) && Array.isArray(a[0])) {
           a.push(b);
           return a;
         }
