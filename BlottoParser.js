@@ -265,7 +265,7 @@ define(function() {
       if (match = op.match(/^(.+)?''$/)) {
         return match[1] ? [match[1] + "'" + a.replace(/'/g, "''") + "'"] : a;
       }
-      if (match = op.match(/^(.+)\{\}$/)) {
+      if (match = op.match(/^(.+)\{\}/)) {
         var sections = [].slice.call(arguments, 1);
         var anyFailed = false;
         for (var i = 0; i < sections.length; i++) {
@@ -283,10 +283,10 @@ define(function() {
           if (sections[0].length === 0) {
             return [op];
           }
-          sections[0].splice(0, 0, op.slice(0, -1) + ':');
+          sections[0].splice(0, 0, match[1] + '{:');
           return sections[0];
         }
-        sections.splice(0, 0, op.slice(0, -1) + '::');
+        sections.splice(0, 0, match[1] + '{::');
         return sections;
       }
       if (op === '@()') {
