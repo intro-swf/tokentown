@@ -285,7 +285,7 @@ define(function() {
           sections[0].splice(0, 0, op.slice(0, -1) + ':');
           return sections[0];
         }
-        sections.splice(0, 0, (0, 0, op.slice(0, -1) + '::'););
+        sections.splice(0, 0, op.slice(0, -1) + '::');
         return sections;
       }
       if (op === '@()') {
