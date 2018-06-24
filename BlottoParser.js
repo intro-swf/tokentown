@@ -167,6 +167,26 @@ define(function() {
                   expr.push(scoop[1]);
                   token = scoop;
                 } while (token.input[token.index + token[0].length] === '{');
+                if (RX_WORD.test(token.input[token.index + token[0].length] || '')) {
+                  var nextWord = next_token(token);
+                  if (nextWord.input[nextWord.index + nextWord[0].length] === '{') {
+                    var start = nextWord.index;
+                    for (;;) {
+                      token = nextWord;
+                      do {
+                        token = next_scoop(token, true);
+                      } while (token.input[token.index + token[0].length] === '{');
+                      if (!RX_WORD.test(token.input[token.index + token[0].length] || '')) {
+                        break;
+                      }
+                      nextWord = next_token(token);
+                      if (nextWord.input[nextWord.index + nextWord[0].length] !== '{') {
+                        break;
+                      }
+                    }
+                    expr.push(token.input.slice(start, token.index + token[1].length));
+                  }
+                }
                 break;
               default:
                 expr = ['(name)', token[1]];
