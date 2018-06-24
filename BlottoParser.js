@@ -259,10 +259,10 @@ define(function() {
     revive: function(op, a, b) {
       var match;
       if (match = op.match(/^#(.+)?$/)) {
-        return match[1] ? [op] : +a;
+        return match[1] ? [a + match[1]] : +a;
       }
       if (match = op.match(/^(.+)?''$/)) {
-        return match[1] ? [op] : a;
+        return match[1] ? [match[1] + "'" + a.replace(/'/g, "''") + "'"] : a;
       }
       if (match = op.match(/^(.+)\{\}$/)) {
         var sections = [].slice.call(arguments, 1);
