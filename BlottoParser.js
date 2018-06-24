@@ -139,7 +139,7 @@ define(function() {
             break;
           }
           // fall through:
-        case '!': case '~': case '++': case '--':
+        case '!': case '~': case '++': case '--': case '*': case '&':
           expr = this.readExpression(next_token(token, true), 16);
           var finalToken = expr.finalToken;
           expr = [token[1]+'@', this.revive.apply(this, expr)];
