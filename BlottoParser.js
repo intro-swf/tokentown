@@ -160,8 +160,9 @@ define(function() {
                 token = expr.finalToken;
                 break;
               case '{':
-                var expr = [token[1] + '{}'];
+                var expr = [token[1]];
                 do {
+                  expr[0] += '{}';
                   var scoop = next_scoop(token, true);
                   expr.push(scoop[1]);
                   token = scoop;
