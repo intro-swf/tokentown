@@ -297,7 +297,14 @@ define(function() {
           opPrecedence = 3;
           rightAssoc = true;
           break;
-        case ';': opPrecedence = 1; break;
+        case ';':
+          if (/^\)?$/.test(token.input[token.index + token[0].length] || '')) {
+            expr = ['@;@', this.revive.apply(this, expr), this.revive('')];
+            expr.finaToken = token;
+            return expr;
+          }
+          opPrecedence = 1;
+          break;
       }
       if (minPrecedence > opPrecedence) return null;
       var rhs = this.readExpression(
