@@ -101,7 +101,9 @@ define(function() {
         expr.finalToken = ['', ''];
         expr.finalToken.index = first.index;
         expr.finalToken.input = first.input;
-        expr = this.extendExpression(expr, 0);
+        do {
+          expr = this.extendExpression(expr, 0);
+        } while (expr.finalToken.index + expr.finalToken[0].length < src.length);
       }
       else {
         expr = this.readExpression(first, 0);
