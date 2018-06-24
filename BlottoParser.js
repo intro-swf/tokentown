@@ -184,7 +184,7 @@ define(function() {
                         break;
                       }
                     }
-                    expr.push(token.input.slice(start, token.index + token[1].length));
+                    expr.push(token.input.slice(start, token.index + token[1].length + 1));
                   }
                 }
                 break;
