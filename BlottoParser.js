@@ -68,7 +68,7 @@ define(function() {
           if (--depth < 1) {
             var final = [
               src.slice(start, match.index + match[0].length),
-              src.slice(start+1, match.index)
+              src.slice(start, match.index+1)
             ];
             final.input = src;
             final.index = start;
@@ -164,7 +164,7 @@ define(function() {
                 do {
                   expr[0] += '{}';
                   var scoop = next_scoop(token, true);
-                  expr.push(scoop[1]);
+                  expr.push(scoop[1].slice(1, -1));
                   token = scoop;
                 } while (token.input[token.index + token[0].length] === '{');
                 if (RX_WORD.test(token.input[token.index + token[0].length] || '')) {
@@ -184,7 +184,7 @@ define(function() {
                         break;
                       }
                     }
-                    expr.push(token.input.slice(start, token.index + token[1].length + 1));
+                    expr.push(token.input.slice(start, token.index + token[1].length));
                   }
                 }
                 break;
