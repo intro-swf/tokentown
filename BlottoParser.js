@@ -369,7 +369,7 @@ define(function() {
           if (opPrecedence < 0) {
             opPrecedence = -opPrecedence;
             return Object.assign(
-              [value(a, opPrecedence) + ' ' + match[1] + ' ' + value(b, opPrecedence)]
+              [value(a, opPrecedence + 0.5) + ' ' + match[1] + ' ' + value(b, opPrecedence)]
               ,{precedence: opPrecedence}
             );
           }
