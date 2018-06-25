@@ -142,7 +142,7 @@ define(function() {
         case '!': case '~': case '++': case '--': case '*': case '&':
           expr = this.readExpression(next_token(token, true), 16);
           var finalToken = expr.finalToken;
-          expr = [token[1]+'@', this.revive.apply(this, expr)];
+          expr = [token[1]+'@/-16', this.revive.apply(this, expr)];
           expr.finalToken = finalToken;
           break;
         case ')':
@@ -280,7 +280,7 @@ define(function() {
           call.finalToken = token;
           return call;
         case '++': case '--':
-          expr = ['@' + token[1], this.revive.apply(this, expr)];
+          expr = ['@' + token[1] + '/17', this.revive.apply(this, expr)];
           expr.finalToken = token;
           return expr;
         case '**': opPrecedence = 15; rightAssoc = true; break;
@@ -348,10 +348,17 @@ define(function() {
           if (num) return [a + num[1]];
           var str = arguments[0].match(/^(.*)''$/);
           if (str) return [str[1] + "'" + a.replace(/'/g, "''") + "'"];
-          var match = op.match(/^(@)?([^@]+)(@)?$/);
+          var match = op.match(/^(@)?([^@]+)(@)?\/(.+)$/);
           if (!match) break;
           if (match[1]) return [value(a) + match[2]];
-          var v = value(a);
+          var v;
+          var opPrecedence = +match[4];
+          if (opPrecedence < 0) {
+            v = value(a, -opPrecedence);
+          }
+          else {
+            v = value(a, opPrecedence);
+          }
           if (/^[+-]$/.test(match[2]) && v[0] === match[2]) {
             return [match[2] + ' ' + v];
           }
