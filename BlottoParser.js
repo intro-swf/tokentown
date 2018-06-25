@@ -168,7 +168,8 @@ define(function() {
             }
           }
           else if (RX_WORD.test(token[1])) {
-            switch (token.input[token.index + token[0].length]) {
+            var nextChar = token.input[token.index + token[0].length] || '';
+            switch (nextChar) {
               case "'":
                 if (token[0] !== token[1]) {
                   throw new Error('whitespace after a string literal prefix is not permitted');
@@ -180,34 +181,48 @@ define(function() {
               case '{':
                 var expr = [token[1]];
                 do {
-                  expr[0] += '{}';
                   var scoop = next_scoop(token, true);
+                  expr[0] += '{}';
                   expr.push(scoop[1].slice(1, -1));
                   token = scoop;
                 } while (token.input[token.index + token[0].length] === '{');
                 if (RX_WORD.test(token.input[token.index + token[0].length] || '')) {
-                  var nextWord = next_token(token);
-                  if (nextWord.input[nextWord.index + nextWord[0].length] === '{') {
-                    var start = nextWord.index;
-                    for (;;) {
-                      token = nextWord;
-                      do {
-                        token = next_scoop(token, true);
-                      } while (token.input[token.index + token[0].length] === '{');
-                      if (!RX_WORD.test(token.input[token.index + token[0].length] || '')) {
-                        break;
-                      }
-                      nextWord = next_token(token);
-                      if (nextWord.input[nextWord.index + nextWord[0].length] !== '{') {
-                        break;
-                      }
+                  var start = token.index + token[0].length;
+                  do {
+                    do {
+                      token = next_token(token, true);
+                    } while (RX_WORD.test(token.input[token.index + token[0].length] || ''));
+                    if (token.input[token.index + token[0].length] !== '{') {
+                      throw new Error('invalid content in Blotto snippet');
                     }
-                    expr.push(token.input.slice(start, token.index + token[1].length));
-                  }
+                    do {
+                      token = next_scoop(token, true);
+                    } while (token.input[token.index + token[0].length] === '{');
+                  } while (RX_WORD.test(token.input[token.index + token[0].length] || ''));
+                  expr[0] += '{}';
+                  expr.push(token.input.slice(start, token.index + token[1].length));
                 }
                 break;
               default:
-                expr = ['(name)', token[1]];
+                if (RX_WORD.test(nextChar)) {
+                  var expr = [token[1] + '{}'];
+                  var start = token.index + token[0].length;
+                  do {
+                    do {
+                      token = next_token(token, true);
+                    } while (RX_WORD.test(token.input[token.index + token[0].length] || ''));
+                    if (token.input[token.index + token[0].length] !== '{') {
+                      throw new Error('invalid content in Blotto snippet');
+                    }
+                    do {
+                      token = next_scoop(token, true);
+                    } while (token.input[token.index + token[0].length] === '{');
+                  } while (RX_WORD.test(token.input[token.index + token[0].length] || ''));
+                  expr.push(token.input.slice(start, token.index + token[1].length));
+                }
+                else {
+                  expr = ['(name)', token[1]];
+                }
                 break;
             }
           }
