@@ -346,7 +346,7 @@ define(function() {
       }
       var scoop = op.match(/^([^{]+)\{/);
       if (scoop) {
-        return scoop[1] + ' {' + [].slice.apply(arguments, 1).join('} {') + '}';
+        return scoop[1] + ' {' + [].slice.call(arguments, 1).join('} {') + '}';
       }
       var match = op.match(/^(@)?([^@]+)(@)?$/);
       if (!match) {
