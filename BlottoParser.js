@@ -353,11 +353,11 @@ define(function() {
           if (str) return [str[1] + "'" + a.replace(/'/g, "''") + "'"];
           var match = op.match(/^(@)?([^@]+)(@)?$/);
           if (!match) break;
-          return match[1] ? [match[1] + ' ' + value(a)] : [value(a) + match[3]];
+          return match[1] ? [match[2] + ' ' + value(a)] : [value(a) + match[2]];
         case 3:
           var match = op.match(/^@([^@]+)@$/);
           if (!match) break;
-          return [value(a) + ' ' + match[2] + ' ' + value(b)];
+          return [value(a) + ' ' + match[1] + ' ' + value(b)];
       }
       throw new Error('unknown op: ' + op);
     },
