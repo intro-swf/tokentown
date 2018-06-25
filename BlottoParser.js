@@ -331,12 +331,6 @@ define(function() {
       switch (op) {
         case '': return [];
         case '(name)': return [a];
-        case '@;@':
-          if (Array.isArray(a) && Array.isArray(a[0])) {
-            a.push(b);
-            return a;
-          }
-          return [a, b];
         case '@()':
           return [value(a, 0) + '(' + [].slice.call(arguments, 2).map(function(v) { return value(v); }).join(', ') + ')'];
         case '@[@]':
@@ -366,6 +360,13 @@ define(function() {
           var match = op.match(/^@([^@]+)@\/(.+)$/);
           if (!match) break;
           var opPrecedence = +match[2];
+          if (match[1] === ';') {
+            if (Array.isArray(a) && Array.isArray(a[0])) {
+              a.push(b);
+              return a;
+            }
+            return [a, b];
+          }
           if (opPrecedence < 0) {
             opPrecedence = -opPrecedence;
             return Object.assign(
