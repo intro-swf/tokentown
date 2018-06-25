@@ -173,9 +173,9 @@ define(function() {
                 if (token[0] !== token[1]) {
                   throw new Error('whitespace after a string literal prefix is not permitted');
                 }
-                expr = this.readExpression(next_token(token, true), Infinity);
-                expr[0] = token[1] + "''";
-                token = expr.finalToken;
+                var str = next_token(token, true);
+                expr = [token[1]+"''", str[1].slice(1, -1).replace(/''/g, "'")];
+                token = str;
                 break;
               case '{':
                 var expr = [token[1]];
