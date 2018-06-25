@@ -2,7 +2,7 @@ define(function() {
 
   'use strict';
   
-  const RXS_WORD = '(?![0-9])((?:[A-Za-z0-9_$@]|[^\\x00-\\xFF])+)';
+  const RXS_WORD = '(?![0-9])(?:(?:[A-Za-z0-9_$@]|[^\\x00-\\xFF])+)';
   const RX_WORD = new RegExp('^' + RXS_WORD + '$');
   const RX_WORD_CHAIN = new RegExp('^' + RXS_WORD + '(?:\.' + RXS_WORD + ')*$');
   const RX_TOKEN = new RegExp('(' + [
