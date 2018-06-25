@@ -341,32 +341,25 @@ define(function() {
         case '@.(name)':
           return [value(a) + '.' + b];
       }
-      if (arguments.length === 1) {
-        var num = arguments[0].match(/^#(.*)$/);
-        if (num) return [a + num[1]];
-        var str = arguments[0].match(/^(.*)''$/);
-        if (str) return [str[1] + "'" + a.replace(/'/g, "''") + "'"];
-        return [op];
-      }
       var scoop = op.match(/^([^{]+)\{/);
       if (scoop) {
-        return scoop[1] + ' {' + [].slice.call(arguments, 1).join('} {') + '}';
+        return [scoop[1] + ' {' + [].slice.call(arguments, 1).join('} {') + '}'];
       }
-      var match = op.match(/^(@)?([^@]+)(@)?$/);
-      if (!match || (!match[1] && !match[3])) {
-        throw new Error('unknown op: ' + op);
-      }
-      if (match[1]) {
-        if (match[3]) {
+      switch (arguments.length) {
+        case 2:
+          var num = op.match(/^#(.*)$/);
+          if (num) return [a + num[1]];
+          var str = arguments[0].match(/^(.*)''$/);
+          if (str) return [str[1] + "'" + a.replace(/'/g, "''") + "'"];
+          var match = op.match(/^(@)?([^@]+)(@)?$/);
+          if (!match) break;
+          return match[1] ? [match[1] + ' ' + value(a)] : [value(a) + match[3]];
+        case 3:
+          var match = op.match(/^@([^@]+)@$/);
+          if (!match) break;
           return [value(a) + ' ' + match[2] + ' ' + value(b)];
-        }
-        else {
-          return [match[1] + ' ' + value(a)];
-        }
       }
-      else {
-        return [value(a) + match[3]];
-      }
+      throw new Error('unknown op: ' + op);
     },
   };
   
