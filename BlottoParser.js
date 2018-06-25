@@ -335,7 +335,7 @@ define(function() {
           }
           return [a, b];
         case '@()':
-          return [value(a) + '(' + [].slice.call(arguments, 1).map(value).join(', ') + ')'];
+          return [value(a) + '(' + [].slice.call(arguments, 2).map(value).join(', ') + ')'];
         case '@[@]':
           return [value(a) + '[' + value(b) + ']'];
         case '@.(name)':
