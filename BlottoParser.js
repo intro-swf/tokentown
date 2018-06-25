@@ -335,13 +335,17 @@ define(function() {
           }
           return [a, b];
         case '@()':
-          return value(a) + '(' + [].slice.call(arguments, 1).map(value).join(', ') + ')';
+          return [value(a) + '(' + [].slice.call(arguments, 1).map(value).join(', ') + ')'];
         case '@[@]':
-          return value(a) + '[' + value(b) + ']';
+          return [value(a) + '[' + value(b) + ']';
         case '@.(name)':
-          return value(a) + '.' + b;
+          return [value(a) + '.' + b];
       }
       if (arguments.length === 1) {
+        var num = arguments[0].match(/^#(.*)$/);
+        if (num) return [a + num[1]];
+        var str = arguments[0].match(/^(.*)''$/);
+        if (str) return [str[1] + "'" + a.replace(/'/g, "''") + "'"];
         return [op];
       }
       var scoop = op.match(/^([^{]+)\{/);
@@ -349,7 +353,7 @@ define(function() {
         return scoop[1] + ' {' + [].slice.call(arguments, 1).join('} {') + '}';
       }
       var match = op.match(/^(@)?([^@]+)(@)?$/);
-      if (!match) {
+      if (!match || (!match[1] && !match[3])) {
         throw new Error('unknown op: ' + op);
       }
       if (match[1]) {
