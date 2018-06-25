@@ -319,92 +319,50 @@ define(function() {
       return expr;
     },
     revive: function(op, a, b) {
-      var match;
-      if (match = op.match(/^#(.+)?$/)) {
-        return match[1] ? [a + match[1]] : +a;
+      function value(v) {
+        if (v.length === 0 || Array.isArray(v[0])) {
+          return '(' + v.map(value).join('; ') + ')';
+        }
+        return '(' + v[0] + ')';
       }
-      if (match = op.match(/^(.+)?''$/)) {
-        return match[1] ? [match[1] + "'" + a.replace(/'/g, "''") + "'"] : a;
-      }
-      if (match = op.match(/^([^{]+)\{\}/)) {
-        var sections = [].slice.call(arguments, 1);
-        var anyFailed = false;
-        for (var i = 0; i < sections.length; i++) {
-          try {
-            sections[i] = this.parse(sections[i]);
-            if (!Array.isArray(sections[i]) || (sections[i].length > 0 && !Array.isArray(sections[i][0]))) {
-              sections[i] = [sections[i]];
-            }
+      switch (op) {
+        case '': return [];
+        case '(name)': return [a];
+        case '@;@':
+          if (Array.isArray(a) && Array.isArray(a[0])) {
+            a.push(b);
+            return a;
           }
-          catch (e) {
-            anyFailed = true;
-          }
-        }
-        if (!anyFailed && sections.length === 1) {
-          if (sections[0].length === 0) {
-            return [op];
-          }
-          sections[0].splice(0, 0, match[1] + '{:');
-          return sections[0];
-        }
-        sections.splice(0, 0, match[1] + '{::');
-        return sections;
+          return [a, b];
+        case '@()':
+          return value(a) + '(' + [].slice.call(arguments, 1).map(value).join(', ') + ')';
+        case '@[@]':
+          return value(a) + '[' + value(b) + ']';
+        case '@.(name)':
+          return value(a) + '.' + b;
       }
-      if (op === '@()') {
-        if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
-          if (arguments.length === 2) {
-            return [a[0] + '()'];
-          }
-          else {
-            var call = [].slice.call(arguments, 2);
-            call.splice(0, 0, a[0] + '(:');
-            return call;
-          }
+      if (arguments.length === 1) {
+        return [op];
+      }
+      var scoop = op.match(/^([^{]+)\{/);
+      if (scoop) {
+        return scoop[1] + ' {' + [].slice.apply(arguments, 1).join('} {') + '}';
+      }
+      var match = op.match(/^(@)?([^@]+)(@)?$/);
+      if (!match) {
+        throw new Error('unknown op: ' + op);
+      }
+      if (match[1]) {
+        if (match[3]) {
+          return [value(a) + ' ' + match[2] + ' ' + value(b)];
         }
-        switch (arguments.length) {
-          case 1: return ['@()', a];
-          case 2: return ['@(@)', a, b];
-          default: return ['@(@@)', a, [].slice.call(arguments, 1)];
+        else {
+          return [match[1] + ' ' + value(a)];
         }
       }
-      if (op === '@;@') {
-        if (Array.isArray(a) && Array.isArray(a[0])) {
-          a.push(b);
-          return a;
-        }
-        return [a, b];
+      else {
+        return [value(a) + match[3]];
       }
-      if (op === '@.(name)') {
-        if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
-          return [a[0] + '.' + b];
-        }
-        return ['@.' + b, a];
-      }
-      if (op === '@[@]') {
-        if (Array.isArray(a) && a.length === 1 && typeof a[0] === 'string' && RX_WORD_CHAIN.test(a[0])) {
-          if (b === b|0) {
-            return [a[0] + '['+b+']'];
-          }
-          return [a[0] + '[@]', b];
-        }
-        if (b === b|0) {
-          return ['@['+b+']', a];
-        }
-        return ['@[@]', a, b];
-      }
-      if (op === '') {
-        return [];
-      }
-      if (op === '(name)') {
-        return [a];
-      }
-      if (arguments.length === 2) {
-        return [op,  a];
-      }
-      if (arguments.length === 3) {
-        return [op, a, b];
-      }
-      throw new Error('unrecognized op');
     },
   };
   
