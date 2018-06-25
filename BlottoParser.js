@@ -314,16 +314,19 @@ define(function() {
       var rhs = this.readExpression(
         next_token(token, true),
         rightAssoc ? opPrecedence : opPrecedence+0.5);
-      expr = ['@'+token[1]+'@', this.revive.apply(this, expr), this.revive.apply(this, rhs)];
+      expr = ['@'+token[1]+'@/'+(rightAssoc?-opPrecedence:opPrecedence), this.revive.apply(this, expr), this.revive.apply(this, rhs)];
       expr.finalToken = rhs.finalToken;
       return expr;
     },
     revive: function(op, a, b) {
-      function value(v) {
+      function value(v, minPrecedence) {
         if (v.length === 0 || Array.isArray(v[0])) {
           return '(' + v.map(value).join('; ') + ')';
         }
-        return '(' + v[0] + ')';
+        if (typeof minPrecedence === 'number' && typeof v.precedence === 'number' && v.precedence < minPrecedence) {
+          return '(' + v[0] + ')';
+        }
+        return v[0];
       }
       switch (op) {
         case '': return [];
@@ -335,11 +338,11 @@ define(function() {
           }
           return [a, b];
         case '@()':
-          return [value(a) + '(' + [].slice.call(arguments, 2).map(value).join(', ') + ')'];
+          return [value(a, 0) + '(' + [].slice.call(arguments, 2).map(function(v) { return value(v); }).join(', ') + ')'];
         case '@[@]':
-          return [value(a) + '[' + value(b) + ']'];
+          return [value(a, 0) + '[' + value(b) + ']'];
         case '@.(name)':
-          return [value(a) + '.' + b];
+          return [value(a, 0) + '.' + b];
       }
       var scoop = op.match(/^([^{]+)\{/);
       if (scoop) {
@@ -353,11 +356,29 @@ define(function() {
           if (str) return [str[1] + "'" + a.replace(/'/g, "''") + "'"];
           var match = op.match(/^(@)?([^@]+)(@)?$/);
           if (!match) break;
-          return match[1] ? [match[2] + ' ' + value(a)] : [value(a) + match[2]];
+          if (match[1]) return [value(a) + match[2]];
+          var v = value(a);
+          if (/^[+-]$/.test(match[2]) && v[0] === match[2]) {
+            return [match[2] + ' ' + v];
+          }
+          return [match[2] + v];
         case 3:
-          var match = op.match(/^@([^@]+)@$/);
+          var match = op.match(/^@([^@]+)@\/(.+)$/);
           if (!match) break;
-          return [value(a) + ' ' + match[1] + ' ' + value(b)];
+          var opPrecedence = +match[2];
+          if (opPrecedence < 0) {
+            opPrecedence = -opPrecedence;
+            return Object.assign(
+              [value(a, opPrecedence) + ' ' + match[1] + ' ' + value(b, opPrecedence)]
+              ,{precedence: opPrecedence}
+            );
+          }
+          else {
+            return Object.assign(
+              [value(a, opPrecedence) + ' ' + match[1] + ' ' + value(b, opPrecedence + 0.5)]
+              ,{precedence: opPrecedence}
+            );
+          }
       }
       throw new Error('unknown op: ' + op);
     },
