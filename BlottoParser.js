@@ -233,7 +233,7 @@ define(function() {
               throw new Error('invalid content in Blotto snippet');
             }
             var rhs = next_scoop(operator, true);
-            expr = [operator[1] + '{}{}', lhs, rhs];
+            expr = [operator[1] + '{}{}', lhs[1].slice(1, -1), rhs[1].slice(1, -1)];
             token = rhs;
           }
           else {
