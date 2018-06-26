@@ -9,7 +9,7 @@ define(function() {
       // word
       RXS_WORD
       // single symbol
-      ,'[\\[\\];,()~]'
+      ,'[\\[\\];,()~{]'
       // + ++ += & && &= | || |=
       ,'([\\-+&|])(?:\\2|=)?'
       // * *= ** **= / /= // //=
@@ -225,6 +225,16 @@ define(function() {
                 }
                 break;
             }
+          }
+          else if (token[1] === '{') {
+            var lhs = next_scoop(Object.assign(['',''], {index:token.index, input:token.input}), true);
+            var operator = next_token(lhs, true);
+            if (!RX_WORD.test(operator[1])) {
+              throw new Error('invalid content in Blotto snippet');
+            }
+            var rhs = next_scoop(operator, true);
+            expr = [operator[1] + '{}{}', lhs, rhs];
+            token = rhs;
           }
           else {
             throw new Error('invalid content in Blotto snippet');
