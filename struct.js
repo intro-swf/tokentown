@@ -4,7 +4,7 @@ define(function() {
   
   const fieldDefs = Object.create(null);
   
-  const prototype = {
+  const prototype = Object.create(null, {
     buffer: {value: null, configurable:true},
     byteOffset: {value: 0, configurable:true},
     byteLength: {value: NaN, configurable:true},
@@ -24,7 +24,7 @@ define(function() {
       },
       configurable: true,
     },
-  };
+  });
   
   function StructFieldDef(name) {
     this.name = name;
