@@ -4,6 +4,63 @@ define(function() {
   
   const fieldDefs = Object.create(null);
   
+  function StructProto() {
+    switch (arguments.length) {
+      case 1:
+        if (arguments[0] instanceof ArrayBuffer) {
+          Object.defineProperty(this, 'buffer', {value:arguments[0]});
+          Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength});
+        }
+        else if (ArrayBuffer.isView(arguments[0])) {
+          Object.defineProperty(this, 'buffer', {value:arguments[0].buffer});
+          Object.defineProperty(this, 'byteOffset', {value:arguments[0].byteOffset});
+          Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength});
+        }
+        break;
+      case 2:
+        if (!(arguments[0] instanceof ArrayBuffer) || typeof arguments[1] !== 'number') {
+          throw new Error('invalid params');
+        }
+        Object.defineProperty(this, 'buffer', {value:arguments[0]});
+        Object.defineProperty(this, 'byteOffset', {value:arguments[1]});
+        Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength - arguments[1]});
+        break;
+      case 3:
+        if (!(arguments[0] instanceof ArrayBuffer)
+            || typeof arguments[1] !== 'number'
+            || typeof arguments[2] !== 'number') {
+          throw new Error('invalid params');
+        }
+        Object.defineProperty(this, 'buffer', {value:arguments[0]});
+        Object.defineProperty(this, 'byteOffset', {value:arguments[1]});
+        Object.defineProperty(this, 'byteLength', {value:arguments[2]});
+        break;
+      default:
+        throw new Error('invalid params');
+    }
+  }
+  StructProto.prototype = Object.create(null, {
+    buffer: {value: null, configurable:true},
+    byteOffset: {value: 0, configurable:true},
+    byteLength: {value: NaN, configurable:true},
+    dv: {
+      get: function() {
+        var dv = new DataView(this.buffer, this.byteOffset, this.byteLength);
+        Object.defineProperty(this, 'dv', {value:dv});
+        return dv;
+      },
+      configurable: true,
+    },
+    bytes: {
+      get: function() {
+        var bytes = new Uint8Array(this.buffer, this.byteOffset, this.byteLength);
+        Object.defineProperty(this, 'bytes', {value:bytes});
+        return bytes;
+      },
+      configurable: true,
+    },
+  });
+  
   function StructFieldDef(name) {
     this.name = name;
   }
@@ -230,6 +287,18 @@ define(function() {
         this.fieldOrder.push(field);
       }
       return this;
+    },
+    makeType: function() {
+      function T() {
+      }
+      var properties = {};
+      for (var i = 0; i < this.fieldOrder; i++) {
+        if (typeof this.fieldOrder[i] === 'string') {
+          var field = this.namedFields[this.fieldOrder[i]];
+          field.addPropertyDescriptors(properties, this, i);
+        }
+      }
+      return T;
     },
   });
   
