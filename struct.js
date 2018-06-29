@@ -4,7 +4,7 @@ define(function() {
   
   const fieldDefs = Object.create(null);
   
-  const props = {
+  const prototype = {
     buffer: {value: null, configurable:true},
     byteOffset: {value: 0, configurable:true},
     byteLength: {value: NaN, configurable:true},
@@ -293,13 +293,13 @@ define(function() {
           field.addPropertyDescriptors(properties, this, i);
         }
       }
-      T.prototype = Object.create(StructProto.prototype, properties);
+      T.prototype = Object.create(prototype, properties);
       return T;
     },
   });
   
   return {
-    props: props,
+    prototype: prototype,
     Def: StructDef,
     FieldDef: StructFieldDef,
     fieldDefs: fieldDefs,
