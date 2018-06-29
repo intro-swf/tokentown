@@ -291,7 +291,7 @@ define(function() {
     makeType: function() {
       var T = StructProto.bind(null);
       var properties = {};
-      for (var i = 0; i < this.fieldOrder; i++) {
+      for (var i = 0; i < this.fieldOrder.length; i++) {
         if (typeof this.fieldOrder[i] === 'string') {
           var field = this.namedFields[this.fieldOrder[i]];
           field.addPropertyDescriptors(properties, this, i);
