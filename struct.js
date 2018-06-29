@@ -286,7 +286,7 @@ define(function() {
             throw new Error('invalid params');
         }
       }
-      var properties = Object.assign({}, props);
+      var properties = {};
       for (var i = 0; i < this.fieldOrder.length; i++) {
         if (typeof this.fieldOrder[i] === 'string') {
           var field = this.namedFields[this.fieldOrder[i]];
