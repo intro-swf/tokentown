@@ -303,6 +303,7 @@ define(function() {
   });
   
   return {
+    Proto: StructProto,
     Def: StructDef,
     FieldDef: StructFieldDef,
     fieldDefs: fieldDefs,
