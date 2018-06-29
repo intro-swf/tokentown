@@ -299,7 +299,7 @@ define(function() {
   });
   
   return {
-    Proto: StructProto,
+    props: props,
     Def: StructDef,
     FieldDef: StructFieldDef,
     fieldDefs: fieldDefs,
