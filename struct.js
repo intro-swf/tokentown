@@ -172,7 +172,7 @@ define(function() {
     this.fieldOrder = [];
     this.namedFields = Object.create(null);
   }
-  StructDef.prototype = Object.create(StructFieldDef, {
+  StructDef.prototype = Object.create(StructFieldDef.prototype, {
     minByteLength: {
       get: function() {
         var b = 0;
