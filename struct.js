@@ -25,7 +25,7 @@ define(function() {
     minByteLength: NaN,
     maxByteLength: NaN,
     get fixedByteLength() {
-      if (isNaN(this.minByteLength) || !this.isFinite(this.minByteLength) || this.minByteLength !== this.maxByteLength) {
+      if (isNaN(this.minByteLength) || !isFinite(this.minByteLength) || this.minByteLength !== this.maxByteLength) {
         return NaN;
       }
       return this.minByteLength;
