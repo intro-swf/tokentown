@@ -91,24 +91,21 @@ define(function() {
       this.minByteLength = this.maxByteLength = n;
     },
     paddingAlignment: 1,
-    addPropertyDescriptors: function(obj, struct, name) {
+    addPropertyDescriptors: function(obj, struct, field_i) {
       if (!(struct instanceof StructDef)) {
         throw new Error('generating descriptor requires struct def');
       }
+      const name = struct.fieldOrder[field_i];
       if (typeof name !== 'string') {
         throw new Error('generating descriptor requires field name');
       }
-      const i = struct.fieldOrder.indexOf(name);
-      if (i === -1) {
-        throw new Error('field not found: ' + name);
-      }
       let byteOffset = -1;
       let prevName = null;
-      let firstAnon_i = i;
+      let firstAnon_i = field_i;
       while (firstAnon_i > 0 && typeof struct.fieldOrder[firstAnon_i] === 'object') {
         firstAnon_i--;
       }
-      if (firstAnon_i < i) {
+      if (firstAnon_i < field_i) {
         if (firstAnon_i === 0) {
           byteOffset = 0;
         }
@@ -121,7 +118,7 @@ define(function() {
           }
         }
         let anonLength = 0;
-        for (let j = firstAnon_i; j < i; j++) {
+        for (let j = firstAnon_i; j < field_i; j++) {
           const anon = struct.fieldOrder[j];
           const byteLength = anon.fixedByteLength;
           if (isNaN(byteLength)) {
@@ -140,7 +137,7 @@ define(function() {
               if (byteOffset === -1) {
                 byteOffset = this['byteOffset<'+prevName+'>'];
               }
-              for (let j = firstAnon_i; j < i; j++) {
+              for (let j = firstAnon_i; j < field_i; j++) {
                 const anon = struct.fieldOrder[j];
                 const anonLength = anon.fixedByteLength;
                 if (!isNaN(anonLength)) {
@@ -158,12 +155,12 @@ define(function() {
         }
       }
       else {
-        if (i === 0) {
+        if (field_i === 0) {
           byteOffset = 0;
           obj['byteOffset<'+name+'>'] = {value:0};
         }
         else {
-          prevName = struct.fieldOrder[i-1];
+          prevName = struct.fieldOrder[field_i-1];
           const prevOffset = obj['byteOffset<'+prevName+'>'];
           const prevLength = obj['byteLength<'+prevName+'>'];
           if (prevOffset && prevLength && typeof prevOffset.value === 'number' && typeof prevLength.value === 'number') {
