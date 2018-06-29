@@ -289,8 +289,7 @@ define(function() {
       return this;
     },
     makeType: function() {
-      function T() {
-      }
+      var T = StructProto.bind(null);
       var properties = {};
       for (var i = 0; i < this.fieldOrder; i++) {
         if (typeof this.fieldOrder[i] === 'string') {
@@ -298,6 +297,7 @@ define(function() {
           field.addPropertyDescriptors(properties, this, i);
         }
       }
+      T.prototype = Object.create(StructProto.prototype, properties);
       return T;
     },
   });
