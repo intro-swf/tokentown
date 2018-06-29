@@ -172,7 +172,34 @@ define(function() {
     this.fieldOrder = [];
     this.namedFields = Object.create(null);
   }
-  StructDef.prototype = Object.create(StructFieldDef);
+  StructDef.prototype = Object.create(StructFieldDef, {
+    minByteLength: {
+      get: function() {
+        var b = 0;
+        for (var i = 0; i < this.fieldOrder.length; i++) {
+          var field = this.fieldOrder[i];
+          if (typeof field === 'string') {
+            field = this.namedFields[field];
+          }
+          b += field.minByteLength;
+        }
+        return b;
+      },
+    },
+    maxByteLength: {
+      get: function() {
+        var b = 0;
+        for (var i = 0; i < this.fieldOrder.length; i++) {
+          var field = this.fieldOrder[i];
+          if (typeof field === 'string') {
+            field = this.namedFields[field];
+          }
+          b += field.maxByteLength;
+        }
+        return b;
+      },
+    },
+  });
   Object.assign(StructDef.prototype, {
     fieldDefs: fieldDefs,
     endian: undefined,
