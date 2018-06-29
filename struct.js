@@ -220,7 +220,7 @@ define(function() {
       }
       const field = TDef;
       if (name) {
-        if (name in this.fieldsByName) {
+        if (name in this.namedFields) {
           throw new Error('duplicate field name: ' + name);
         }
         this.fieldOrder.push(name);
