@@ -177,6 +177,7 @@ define(function() {
           if (e) throw e;
           setter(this.dv, this['byteOffset<'+name+'>'], value);
         },
+        enumerable: true,
       };
     },
   };
