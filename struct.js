@@ -328,7 +328,7 @@ define(function() {
         }
       }
       T.prototype = Object.create(prototype, properties);
-      Object.assign(this, 'Buffered', {
+      Object.defineProperty(this, 'Buffered', {
         value: T,
         enumerable: true,
       });
