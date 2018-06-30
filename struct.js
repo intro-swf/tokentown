@@ -38,6 +38,9 @@ define(function() {
       }
       throw new Error('getDataView not implemented');
     },
+    getValueError: function(value) {
+      return null;
+    },
     readValue: function(dataView, byteOffset) {
       throw new Error('readValue not implemented');
     },
@@ -164,11 +167,14 @@ define(function() {
       }
       const getter = this.readValue.bind(this);
       const setter = this.writeValue.bind(this);
+      const valuator = this.getValueError.bind(this);
       obj[name] = {
         get: function() {
           return getter(this.dv, this['byteOffset<'+name+'>']);
         },
         set: function(value) {
+          var e = valuator(value);
+          if (e) throw e;
           setter(this.dv, this['byteOffset<'+name+'>'], value);
         },
       };
@@ -182,6 +188,12 @@ define(function() {
     },
     writeValue: function(dv, o, v) {
       dv.setUint8(o, v);
+    },
+    getValueError: function(value) {
+      if (value & 0xff !== value) {
+        return new Error('invalid u8 value: ' + value);
+      }
+      return null;
     },
   });
   
