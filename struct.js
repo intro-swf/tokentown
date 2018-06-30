@@ -393,6 +393,6 @@ define(function() {
     Def: StructDef,
     FieldDef: StructFieldDef,
     fieldDefs: fieldDefs,
-  };
+  });
 
 });
