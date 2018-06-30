@@ -230,6 +230,10 @@ define(function() {
         return b;
       },
     },
+    isFinalized: {
+      value: false,
+      configurable: true,
+    },
   });
   Object.assign(StructDef.prototype, {
     fieldDefs: fieldDefs,
@@ -262,8 +266,26 @@ define(function() {
       }
       return this;
     },
-    makeType: function() {
-      function T() {
+    finalize: function() {
+      if (this.isFinalized) return;
+      for (var i = 0; i < this.fieldOrder; i++) {
+        var field = this.fieldOrder[i];
+        if (typeof field === 'string') {
+          field = this.namedFields[field];
+        }
+        if (field typeof StructDef && !field.isFinalized) {
+          throw new Error('field structs must be finalized before parent struct');
+        }
+      }
+      Object.freeze(this.fieldOrder);
+      Object.freeze(this.namedFields);
+      Object.defineProperty(this, 'isFinalized', {
+        value: true,
+      });
+    },
+    get Buffered() {
+      if (!this.isFinalized) return null;
+      const T = function() {
         switch (arguments.length) {
           case 1:
             if (arguments[0] instanceof ArrayBuffer) {
@@ -306,6 +328,10 @@ define(function() {
         }
       }
       T.prototype = Object.create(prototype, properties);
+      Object.assign(this, 'Buffered', {
+        value: T,
+        enumerable: true,
+      });
       return T;
     },
   });
