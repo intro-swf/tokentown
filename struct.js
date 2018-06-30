@@ -287,6 +287,7 @@ define(function() {
         return T;
       },
       enumerable: true,
+      configurable: true,
     },
   });
   Object.assign(StructDef.prototype, {
