@@ -209,6 +209,7 @@ define(function() {
   
   fieldDefs.u8 = Object.assign(new StructFieldDef('u8'), {
     fixedByteLength: 1,
+    defaultValue: 0,
     readValue: function(dv, o) {
       return dv.getUint8(o);
     },
