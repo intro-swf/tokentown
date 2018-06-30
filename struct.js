@@ -4,7 +4,9 @@ define(function() {
   
   const fieldDefs = Object.create(null);
   
-  const prototype = Object.create(null, {
+  const basePrototype = Object.create(null);
+  
+  const bufferedPrototype = Object.create(basePrototype, {
     buffer: {value: null, configurable:true},
     byteOffset: {value: 0, configurable:true},
     byteLength: {value: NaN, configurable:true},
@@ -26,6 +28,9 @@ define(function() {
     },
   });
   
+  const objectPrototype = Object.create(basePrototype, {
+  });
+  
   function StructFieldDef(name) {
     this.name = name;
   }
@@ -38,6 +43,7 @@ define(function() {
       }
       throw new Error('getDataView not implemented');
     },
+    defaultValue: undefined,
     getValueError: function(value) {
       return null;
     },
@@ -59,6 +65,25 @@ define(function() {
       this.minByteLength = this.maxByteLength = n;
     },
     paddingAlignment: 1,
+    addObjectPropertyDescriptors: function(obj, name) {
+      const symb = Symbol.for(name);
+      const valuator = this.getValueError.bind(this);
+      obj[symb] = {
+        value: this.defaultValue,
+        writable: true,
+      };
+      obj[name] = {
+        get: function() {
+          return this[symb];
+        },
+        set: function(v) {
+          var e = valuator(v);
+          if (e) throw e;
+          this[symb] = v;
+        },
+        enumerable: true,
+      };
+    },
     addBufferedPropertyDescriptors: function(obj, struct, field_i) {
       if (!(struct instanceof StructDef)) {
         throw new Error('generating descriptor requires struct def');
@@ -235,10 +260,26 @@ define(function() {
       value: false,
       configurable: true,
     },
+    Object: {
+      get: function() {
+        if (!this.isFinalized) return null;
+        function StructObject() {
+        }
+        var properties = {};
+        for (var k in this.namedFields) {
+          this.namedFields[k].addObjectPropertyDescriptors(properties, k);
+        }
+        StructObject.prototype = Object.create(objectPrototype, properties);
+        Object.defineProperty(this, 'Object', {value:StructObject, enumerable:true});
+        return StructObject;
+      },
+      enumerable: true,
+      configurable: true,
+    },
     Buffered: {
       get: function() {
         if (!this.isFinalized) return null;
-        const T = function() {
+        function BufferedStructObject() {
           switch (arguments.length) {
             case 1:
               if (arguments[0] instanceof ArrayBuffer) {
@@ -280,12 +321,12 @@ define(function() {
             field.addBufferedPropertyDescriptors(properties, this, i);
           }
         }
-        T.prototype = Object.create(prototype, properties);
+        BufferedStructObject.prototype = Object.create(bufferedPrototype, properties);
         Object.defineProperty(this, 'Buffered', {
-          value: T,
+          value: BufferedStructObject,
           enumerable: true,
         });
-        return T;
+        return BufferedStructObject;
       },
       enumerable: true,
       configurable: true,
@@ -341,11 +382,17 @@ define(function() {
     },
   });
   
-  return Object.assign(function(){ throw new Error('invalid constructor'); }, {
-    prototype: prototype,
+  return Object.assign(function(){throw new Error('invalid constructor'); }, {
+    prototype: basePrototype,
+    Buffered: Object.assign(
+      function(){ throw new Error('invalid constructor'); },
+      {prototype: bufferedPrototype}),
+    Object: Object.assign(
+      function(){ throw new Error('invalid constructor'); },
+      {prototype: objectPrototype}),
     Def: StructDef,
     FieldDef: StructFieldDef,
     fieldDefs: fieldDefs,
-  });
+  };
 
 });
