@@ -218,7 +218,24 @@ define(function() {
     },
     getValueError: function(value) {
       if ((value&0xff) !== value) {
-        return new Error('invalid u8 value: ' + value);
+        return new Error('invalid u8 value: ' + value);I
+      }
+      return null;
+    },
+  });
+  
+  fieldDefs.i8 = Object.assign(new StructFieldDef('i8'), {
+    fixedByteLength: 1,
+    defaultValue: 0,
+    readValue: function(dv, o) {
+      return dv.getInt8(o);
+    },
+    writeValue: function(dv, o, v) {
+      dv.setInt8(o, v);
+    },
+    getValueError: function(value) {
+      if ((value<<24>>24) !== value) {
+        return new Error('invalid i8 value: ' + value);
       }
       return null;
     },
