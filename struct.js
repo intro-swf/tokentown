@@ -190,7 +190,7 @@ define(function() {
       dv.setUint8(o, v);
     },
     getValueError: function(value) {
-      if (value & 0xff !== value) {
+      if ((value&0xff) !== value) {
         return new Error('invalid u8 value: ' + value);
       }
       return null;
