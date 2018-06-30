@@ -310,11 +310,11 @@ define(function() {
     },
   });
   
-  return {
+  return Object.assign(function(){ throw new Error('invalid constructor'); }, {
     prototype: prototype,
     Def: StructDef,
     FieldDef: StructFieldDef,
     fieldDefs: fieldDefs,
-  };
+  });
 
 });
