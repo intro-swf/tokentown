@@ -273,7 +273,7 @@ define(function() {
         if (typeof field === 'string') {
           field = this.namedFields[field];
         }
-        if (field typeof StructDef && !field.isFinalized) {
+        if (field instanceof StructDef && !field.isFinalized) {
           throw new Error('field structs must be finalized before parent struct');
         }
       }
