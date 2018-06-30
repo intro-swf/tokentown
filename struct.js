@@ -59,7 +59,7 @@ define(function() {
       this.minByteLength = this.maxByteLength = n;
     },
     paddingAlignment: 1,
-    addPropertyDescriptors: function(obj, struct, field_i) {
+    addBufferedPropertyDescriptors: function(obj, struct, field_i) {
       if (!(struct instanceof StructDef)) {
         throw new Error('generating descriptor requires struct def');
       }
@@ -277,7 +277,7 @@ define(function() {
         for (var i = 0; i < this.fieldOrder.length; i++) {
           if (typeof this.fieldOrder[i] === 'string') {
             var field = this.namedFields[this.fieldOrder[i]];
-            field.addPropertyDescriptors(properties, this, i);
+            field.addBufferedPropertyDescriptors(properties, this, i);
           }
         }
         T.prototype = Object.create(prototype, properties);
