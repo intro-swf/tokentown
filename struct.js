@@ -234,6 +234,60 @@ define(function() {
       value: false,
       configurable: true,
     },
+    Buffered: {
+      get: function() {
+        if (!this.isFinalized) return null;
+        const T = function() {
+          switch (arguments.length) {
+            case 1:
+              if (arguments[0] instanceof ArrayBuffer) {
+                Object.defineProperty(this, 'buffer', {value:arguments[0]});
+                Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength});
+              }
+              else if (ArrayBuffer.isView(arguments[0])) {
+                Object.defineProperty(this, 'buffer', {value:arguments[0].buffer});
+                Object.defineProperty(this, 'byteOffset', {value:arguments[0].byteOffset});
+                Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength});
+              }
+              break;
+            case 2:
+              if (!(arguments[0] instanceof ArrayBuffer) || typeof arguments[1] !== 'number') {
+                throw new Error('invalid params');
+              }
+              Object.defineProperty(this, 'buffer', {value:arguments[0]});
+              Object.defineProperty(this, 'byteOffset', {value:arguments[1]});
+              Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength - arguments[1]});
+              break;
+            case 3:
+              if (!(arguments[0] instanceof ArrayBuffer)
+                  || typeof arguments[1] !== 'number'
+                  || typeof arguments[2] !== 'number') {
+                throw new Error('invalid params');
+              }
+              Object.defineProperty(this, 'buffer', {value:arguments[0]});
+              Object.defineProperty(this, 'byteOffset', {value:arguments[1]});
+              Object.defineProperty(this, 'byteLength', {value:arguments[2]});
+              break;
+            default:
+              throw new Error('invalid params');
+          }
+        }
+        var properties = {};
+        for (var i = 0; i < this.fieldOrder.length; i++) {
+          if (typeof this.fieldOrder[i] === 'string') {
+            var field = this.namedFields[this.fieldOrder[i]];
+            field.addPropertyDescriptors(properties, this, i);
+          }
+        }
+        T.prototype = Object.create(prototype, properties);
+        Object.defineProperty(this, 'Buffered', {
+          value: T,
+          enumerable: true,
+        });
+        return T;
+      },
+      enumerable: true,
+    },
   });
   Object.assign(StructDef.prototype, {
     fieldDefs: fieldDefs,
@@ -282,57 +336,6 @@ define(function() {
       Object.defineProperty(this, 'isFinalized', {
         value: true,
       });
-    },
-    get Buffered() {
-      if (!this.isFinalized) return null;
-      const T = function() {
-        switch (arguments.length) {
-          case 1:
-            if (arguments[0] instanceof ArrayBuffer) {
-              Object.defineProperty(this, 'buffer', {value:arguments[0]});
-              Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength});
-            }
-            else if (ArrayBuffer.isView(arguments[0])) {
-              Object.defineProperty(this, 'buffer', {value:arguments[0].buffer});
-              Object.defineProperty(this, 'byteOffset', {value:arguments[0].byteOffset});
-              Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength});
-            }
-            break;
-          case 2:
-            if (!(arguments[0] instanceof ArrayBuffer) || typeof arguments[1] !== 'number') {
-              throw new Error('invalid params');
-            }
-            Object.defineProperty(this, 'buffer', {value:arguments[0]});
-            Object.defineProperty(this, 'byteOffset', {value:arguments[1]});
-            Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength - arguments[1]});
-            break;
-          case 3:
-            if (!(arguments[0] instanceof ArrayBuffer)
-                || typeof arguments[1] !== 'number'
-                || typeof arguments[2] !== 'number') {
-              throw new Error('invalid params');
-            }
-            Object.defineProperty(this, 'buffer', {value:arguments[0]});
-            Object.defineProperty(this, 'byteOffset', {value:arguments[1]});
-            Object.defineProperty(this, 'byteLength', {value:arguments[2]});
-            break;
-          default:
-            throw new Error('invalid params');
-        }
-      }
-      var properties = {};
-      for (var i = 0; i < this.fieldOrder.length; i++) {
-        if (typeof this.fieldOrder[i] === 'string') {
-          var field = this.namedFields[this.fieldOrder[i]];
-          field.addPropertyDescriptors(properties, this, i);
-        }
-      }
-      T.prototype = Object.create(prototype, properties);
-      Object.defineProperty(this, 'Buffered', {
-        value: T,
-        enumerable: true,
-      });
-      return T;
     },
   });
   
