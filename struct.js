@@ -44,6 +44,11 @@ define(function() {
       throw new Error('getDataView not implemented');
     },
     defaultValue: undefined,
+    getByteLengthForValue: function(value) {
+      const byteLength = this.fixedByteLength;
+      if (!isNaN(byteLength)) return byteLength;
+      throw new Error('getByteLengthForValue not implemented');
+    },
     getValueError: function(value) {
       return null;
     },
@@ -281,9 +286,27 @@ define(function() {
     Object: {
       get: function() {
         if (!this.isFinalized) return null;
-        function StructObject() {
+        function StructObject(src) {
+          if (src) {
+            if (src instanceof ArrayBuffer) {
+              var byteOffset = arguments[1];
+              if (isNaN(byteOffset)) byteOffset = 0;
+              var byteLength = arguments[2];
+              if (isNaN(byteLength)) byteLength = src.byteLength - byteOffset;
+              src = new this.struct.Buffered(src, byteOffset, byteLength);
+            }
+            for (var i = 0; i < this.struct.fieldOrder.length; i++) {
+              var field = this.struct.fieldOrder[i];
+              if (typeof field === 'string') {
+                // TODO: handle recursion into objects
+                if (field in src) {
+                  this[field] = src[field];
+                }
+              }
+            }
+          }
         }
-        var properties = {};
+        var properties = {struct:{value:this}};
         for (var k in this.namedFields) {
           this.namedFields[k].addObjectPropertyDescriptors(properties, k);
         }
@@ -297,42 +320,78 @@ define(function() {
     Buffered: {
       get: function() {
         if (!this.isFinalized) return null;
-        function BufferedStructObject() {
-          switch (arguments.length) {
-            case 1:
-              if (arguments[0] instanceof ArrayBuffer) {
-                Object.defineProperty(this, 'buffer', {value:arguments[0]});
-                Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength});
+        function BufferedStructObject(src) {
+          var buffer, byteOffset, byteLength, rawCopied=false;
+          if (src) {
+            if (src instanceof ArrayBuffer) {
+              buffer = src;
+              byteOffset = arguments[1];
+              if (isNaN(byteOffset)) byteOffset = 0;
+              byteLength = arguments[2];
+              if (isNaN(byteLength)) byteLength = buffer.byteLength - byteOffset;
+            }
+            else if (src instanceof this.struct.Buffered) {
+              buffer = new ArrayBuffer(src.byteLength);
+              new Uint8Array(buffer).set(new Uint8Array(src.buffer, src.byteOffset, src.byteLength));
+              byteOffset = 0;
+              byteLength = buffer.byteLength;
+              rawCopied = true;
+            }
+            else {
+              byteOffset = 0;
+              byteLength = 0;
+              for (var i = 0; i < this.struct.fieldOrder.length; i++) {
+                var field = this.struct.fieldOrder[i];
+                if (typeof field === 'string') {
+                  var def = this.struct.namedFields[field];
+                  byteLength += def.getByteLengthForValue(field in src ? src[field] : def.defaultValue);
+                }
+                else {
+                  byteLength += field.getByteLengthForValue(field.defaultValue);
+                }
               }
-              else if (ArrayBuffer.isView(arguments[0])) {
-                Object.defineProperty(this, 'buffer', {value:arguments[0].buffer});
-                Object.defineProperty(this, 'byteOffset', {value:arguments[0].byteOffset});
-                Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength});
+              buffer = new ArrayBuffer(byteLength);
+            }
+          }
+          else {
+            byteOffset = 0;
+            byteLength = 0;
+            for (var i = 0; i < this.struct.fieldOrder.length; i++) {
+              var field = this.struct.fieldOrder[i];
+              if (typeof field === 'string') {
+                field = this.struct.namedFields[field];
               }
-              break;
-            case 2:
-              if (!(arguments[0] instanceof ArrayBuffer) || typeof arguments[1] !== 'number') {
-                throw new Error('invalid params');
+              byteLength += field.getByteLengthForValue(field.defaultValue);
+            }
+            buffer = new ArrayBuffer(byteLength);
+          }
+          Object.defineProperty(this, 'buffer', {value:buffer});
+          if (byteOffset !== 0) {
+            Object.defineProperty(this, 'byteOffset', {value:byteOffset});
+          }
+          Object.defineProperty(this, 'byteLength', {value:byteLength});
+          if (!rawCopied) {
+            if (src) {
+              for (var i = 0; i < this.struct.fieldOrder.length; i++) {
+                var field = this.struct.fieldOrder[i];
+                if (typeof field === 'string') {
+                  // TODO: complex fields
+                  this[field] = field in src ? src[field] : this.struct.namedFields[field].defaultValue;
+                }
               }
-              Object.defineProperty(this, 'buffer', {value:arguments[0]});
-              Object.defineProperty(this, 'byteOffset', {value:arguments[1]});
-              Object.defineProperty(this, 'byteLength', {value:arguments[0].byteLength - arguments[1]});
-              break;
-            case 3:
-              if (!(arguments[0] instanceof ArrayBuffer)
-                  || typeof arguments[1] !== 'number'
-                  || typeof arguments[2] !== 'number') {
-                throw new Error('invalid params');
+            }
+            else {
+              for (var i = 0; i < this.struct.fieldOrder.length; i++) {
+                var field = this.struct.fieldOrder[i];
+                if (typeof field === 'string') {
+                  // TODO: complex fields
+                  this[field] = this.struct.namedFields[field].defaultValue;
+                }
               }
-              Object.defineProperty(this, 'buffer', {value:arguments[0]});
-              Object.defineProperty(this, 'byteOffset', {value:arguments[1]});
-              Object.defineProperty(this, 'byteLength', {value:arguments[2]});
-              break;
-            default:
-              throw new Error('invalid params');
+            }
           }
         }
-        var properties = {};
+        var properties = {struct:{value:this}};
         for (var i = 0; i < this.fieldOrder.length; i++) {
           if (typeof this.fieldOrder[i] === 'string') {
             var field = this.namedFields[this.fieldOrder[i]];
@@ -397,6 +456,7 @@ define(function() {
       Object.defineProperty(this, 'isFinalized', {
         value: true,
       });
+      return this;
     },
   });
   
