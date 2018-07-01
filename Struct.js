@@ -394,49 +394,20 @@ define(function() {
       enumerable: true,
       configurable: true,
     },
-  });
-  Object.assign(Struct.Def.prototype, {
     namedFields: {
-      // reserved field names
-      buffer: true,
-      byteOffset: true,
-      byteLength: true,
-      struct: true,
+      value: Object.create(null),
+      writable: true,
+      configurable: true,
+      enumerable: true,
     },
     fieldDefs: {
-      u8: Object.assign(new Struct.FieldDef('u8'), {
-        fixedByteLength: 1,
-        defaultValue: 0,
-        readValue: function(dv, o) {
-          return dv.getUint8(o);
-        },
-        writeValue: function(dv, o, v) {
-          dv.setUint8(o, v);
-        },
-        getValueError: function(value) {
-          if ((value&0xff) !== value) {
-            return new Error('invalid u8 value: ' + value);I
-          }
-          return null;
-        },
-      }),
-      i8: Object.assign(new Struct.FieldDef('i8'), {
-        fixedByteLength: 1,
-        defaultValue: 0,
-        readValue: function(dv, o) {
-          return dv.getInt8(o);
-        },
-        writeValue: function(dv, o, v) {
-          dv.setInt8(o, v);
-        },
-        getValueError: function(value) {
-          if ((value<<24>>24) !== value) {
-            return new Error('invalid i8 value: ' + value);
-          }
-          return null;
-        },
-      }),
+      value: Object.create(null),
+      writable: true,
+      configurable: true,
+      enumerable: true,
     },
+  });
+  Object.assign(Struct.Def.prototype, {
     endian: undefined,
     fieldOrder: undefined,
     namedFields: undefined,
@@ -484,6 +455,47 @@ define(function() {
       });
       return this;
     },
+  });
+  Object.assign(Struct.Def.prototype.namedFields, {
+    // reserved field names
+    buffer: true,
+    byteOffset: true,
+    byteLength: true,
+    struct: true,
+  });
+  Object.assign(Struct.Def.prototype.fieldDefs, {
+    u8: Object.assign(new Struct.FieldDef('u8'), {
+      fixedByteLength: 1,
+      defaultValue: 0,
+      readValue: function(dv, o) {
+        return dv.getUint8(o);
+      },
+      writeValue: function(dv, o, v) {
+        dv.setUint8(o, v);
+      },
+      getValueError: function(value) {
+        if ((value&0xff) !== value) {
+          return new Error('invalid u8 value: ' + value);I
+        }
+        return null;
+      },
+    }),
+    i8: Object.assign(new Struct.FieldDef('i8'), {
+      fixedByteLength: 1,
+      defaultValue: 0,
+      readValue: function(dv, o) {
+        return dv.getInt8(o);
+      },
+      writeValue: function(dv, o, v) {
+        dv.setInt8(o, v);
+      },
+      getValueError: function(value) {
+        if ((value<<24>>24) !== value) {
+          return new Error('invalid i8 value: ' + value);
+        }
+        return null;
+      },
+    }),
   });
   
   return Struct;
