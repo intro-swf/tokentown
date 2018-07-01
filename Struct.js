@@ -435,7 +435,7 @@ define(function() {
           }
           return null;
         },
-      });
+      }),
     },
     endian: undefined,
     fieldOrder: undefined,
