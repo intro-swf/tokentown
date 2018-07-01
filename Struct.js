@@ -395,7 +395,13 @@ define(function() {
       configurable: true,
     },
     namedFields: {
-      value: Object.create(null),
+      value: Object.create(null, {
+        // reserved field names
+        buffer: {value:null},
+        byteOffset: {value:null},
+        byteLength: {value:null},
+        struct: {value:null},
+      }),
       writable: true,
       configurable: true,
       enumerable: true,
@@ -453,13 +459,6 @@ define(function() {
       });
       return this;
     },
-  });
-  Object.assign(Struct.Def.prototype.namedFields, {
-    // reserved field names
-    buffer: true,
-    byteOffset: true,
-    byteLength: true,
-    struct: true,
   });
   Object.assign(Struct.Def.prototype.fieldDefs, {
     u8: Object.assign(new Struct.FieldDef('u8'), {
