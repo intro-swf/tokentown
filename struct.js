@@ -321,7 +321,7 @@ define(function() {
       get: function() {
         if (!this.isFinalized) return null;
         function BufferedStructObject(src) {
-          var buffer, byteOffset, byteLength, rawCopied=false;
+          var buffer, byteOffset, byteLength, setValues=true;
           if (src) {
             if (src instanceof ArrayBuffer) {
               buffer = src;
@@ -329,13 +329,14 @@ define(function() {
               if (isNaN(byteOffset)) byteOffset = 0;
               byteLength = arguments[2];
               if (isNaN(byteLength)) byteLength = buffer.byteLength - byteOffset;
+              setValues = false;
             }
             else if (src instanceof this.struct.Buffered) {
               buffer = new ArrayBuffer(src.byteLength);
               new Uint8Array(buffer).set(new Uint8Array(src.buffer, src.byteOffset, src.byteLength));
               byteOffset = 0;
               byteLength = buffer.byteLength;
-              rawCopied = true;
+              setValues = false;
             }
             else {
               byteOffset = 0;
@@ -370,7 +371,7 @@ define(function() {
             Object.defineProperty(this, 'byteOffset', {value:byteOffset});
           }
           Object.defineProperty(this, 'byteLength', {value:byteLength});
-          if (!rawCopied) {
+          if (setValues) {
             if (src) {
               for (var i = 0; i < this.struct.fieldOrder.length; i++) {
                 var field = this.struct.fieldOrder[i];
