@@ -97,7 +97,7 @@ define(function() {
       };
     },
     addBufferedPropertyDescriptors: function(obj, struct, field_i) {
-      if (!(struct instanceof StructDef)) {
+      if (!(struct instanceof Struct.Def)) {
         throw new Error('generating descriptor requires struct def');
       }
       const name = struct.fieldOrder[field_i];
