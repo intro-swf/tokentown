@@ -2,11 +2,21 @@ define(function() {
 
   'use strict';
   
-  const fieldDefs = Object.create(null);
+  function Struct() {
+    throw new Error('invalid constructor, see documentation');
+  }
+  Struct.prototype = Object.create(null);
   
-  const basePrototype = Object.create(null);
+  Struct.Object = function StructObject() {
+    throw new Error('invalid constructor, see documentation');
+  };
+  Struct.Object.prototype = Object.create(Struct.prototype, {
+  });
   
-  const bufferedPrototype = Object.create(basePrototype, {
+  Struct.Buffered = function BufferedStructObject() {
+    throw new Error('invalid constructor, see documentation');
+  };
+  Struct.Buffered.prototype = Object.create(Struct.prototype, {
     buffer: {value: null, configurable:true},
     byteOffset: {value: 0, configurable:true},
     byteLength: {value: NaN, configurable:true},
@@ -28,13 +38,10 @@ define(function() {
     },
   });
   
-  const objectPrototype = Object.create(basePrototype, {
-  });
-  
-  function StructFieldDef(name) {
+  Struct.FieldDef = function StructFieldDef(name) {
     this.name = name;
-  }
-  StructFieldDef.prototype = {
+  };
+  Struct.FieldDef.prototype = {
     name: undefined,
     getDataView: function(buffer, byteOffset) {
       const byteLength = this.fixedByteLength;
@@ -212,47 +219,13 @@ define(function() {
     },
   };
   
-  fieldDefs.u8 = Object.assign(new StructFieldDef('u8'), {
-    fixedByteLength: 1,
-    defaultValue: 0,
-    readValue: function(dv, o) {
-      return dv.getUint8(o);
-    },
-    writeValue: function(dv, o, v) {
-      dv.setUint8(o, v);
-    },
-    getValueError: function(value) {
-      if ((value&0xff) !== value) {
-        return new Error('invalid u8 value: ' + value);I
-      }
-      return null;
-    },
-  });
-  
-  fieldDefs.i8 = Object.assign(new StructFieldDef('i8'), {
-    fixedByteLength: 1,
-    defaultValue: 0,
-    readValue: function(dv, o) {
-      return dv.getInt8(o);
-    },
-    writeValue: function(dv, o, v) {
-      dv.setInt8(o, v);
-    },
-    getValueError: function(value) {
-      if ((value<<24>>24) !== value) {
-        return new Error('invalid i8 value: ' + value);
-      }
-      return null;
-    },
-  });
-  
-  function StructDef(name) {
+  Struct.Def = function StructDef(name) {
     this.name = name;
     this.fieldDefs = Object.create(this.fieldDefs);
     this.fieldOrder = [];
-    this.namedFields = Object.create(null);
-  }
-  StructDef.prototype = Object.create(StructFieldDef.prototype, {
+    this.namedFields = Object.create(this.namedFields);
+  };
+  Struct.Def.prototype = Object.create(Struct.FieldDef.prototype, {
     minByteLength: {
       get: function() {
         var b = 0;
@@ -310,7 +283,13 @@ define(function() {
         for (var k in this.namedFields) {
           this.namedFields[k].addObjectPropertyDescriptors(properties, k);
         }
-        StructObject.prototype = Object.create(objectPrototype, properties);
+        StructObject.prototype = Object.create(Struct.Object.prototype, properties);
+        var nameProp = Object.getOwnPropertyDescriptor(StructObject, 'name');
+        if (nameProp && nameProp.configurable) {
+          Object.defineProperty(BufferedStructObject, 'name', Object.assign(nameProp, {
+            name: this.name + '.Object',
+          }));
+        }
         Object.defineProperty(this, 'Object', {value:StructObject, enumerable:true});
         return StructObject;
       },
@@ -399,7 +378,13 @@ define(function() {
             field.addBufferedPropertyDescriptors(properties, this, i);
           }
         }
-        BufferedStructObject.prototype = Object.create(bufferedPrototype, properties);
+        BufferedStructObject.prototype = Object.create(Struct.Buffered.prototype, properties);
+        var nameProp = Object.getOwnPropertyDescriptor(BufferedStructObject, 'name');
+        if (nameProp && nameProp.configurable) {
+          Object.defineProperty(BufferedStructObject, 'name', Object.assign(nameProp, {
+            name: this.name + '.Buffered',
+          }));
+        }
         Object.defineProperty(this, 'Buffered', {
           value: BufferedStructObject,
           enumerable: true,
@@ -410,8 +395,48 @@ define(function() {
       configurable: true,
     },
   });
-  Object.assign(StructDef.prototype, {
-    fieldDefs: fieldDefs,
+  Object.assign(Struct.Def.prototype, {
+    namedFields: {
+      // reserved field names
+      buffer: true,
+      byteOffset: true,
+      byteLength: true,
+      struct: true,
+    },
+    fieldDefs: {
+      u8: Object.assign(new StructFieldDef('u8'), {
+        fixedByteLength: 1,
+        defaultValue: 0,
+        readValue: function(dv, o) {
+          return dv.getUint8(o);
+        },
+        writeValue: function(dv, o, v) {
+          dv.setUint8(o, v);
+        },
+        getValueError: function(value) {
+          if ((value&0xff) !== value) {
+            return new Error('invalid u8 value: ' + value);I
+          }
+          return null;
+        },
+      }),
+      i8: Object.assign(new StructFieldDef('i8'), {
+        fixedByteLength: 1,
+        defaultValue: 0,
+        readValue: function(dv, o) {
+          return dv.getInt8(o);
+        },
+        writeValue: function(dv, o, v) {
+          dv.setInt8(o, v);
+        },
+        getValueError: function(value) {
+          if ((value<<24>>24) !== value) {
+            return new Error('invalid i8 value: ' + value);
+          }
+          return null;
+        },
+      });
+    },
     endian: undefined,
     fieldOrder: undefined,
     namedFields: undefined,
@@ -461,17 +486,6 @@ define(function() {
     },
   });
   
-  return Object.assign(function(){throw new Error('invalid constructor'); }, {
-    prototype: basePrototype,
-    Buffered: Object.assign(
-      function(){ throw new Error('invalid constructor'); },
-      {prototype: bufferedPrototype}),
-    Object: Object.assign(
-      function(){ throw new Error('invalid constructor'); },
-      {prototype: objectPrototype}),
-    Def: StructDef,
-    FieldDef: StructFieldDef,
-    fieldDefs: fieldDefs,
-  });
+  return Struct;
 
 });
