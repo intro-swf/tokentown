@@ -287,7 +287,7 @@ define(function() {
         var nameProp = Object.getOwnPropertyDescriptor(StructObject, 'name');
         if (nameProp && nameProp.configurable) {
           Object.defineProperty(StructObject, 'name', Object.assign(nameProp, {
-            name: this.name + '.Object',
+            value: this.name + '.Object',
           }));
         }
         Object.defineProperty(this, 'Object', {value:StructObject, enumerable:true});
@@ -382,7 +382,7 @@ define(function() {
         var nameProp = Object.getOwnPropertyDescriptor(BufferedStructObject, 'name');
         if (nameProp && nameProp.configurable) {
           Object.defineProperty(BufferedStructObject, 'name', Object.assign(nameProp, {
-            name: this.name + '.Buffered',
+            value: this.name + '.Buffered',
           }));
         }
         Object.defineProperty(this, 'Buffered', {
