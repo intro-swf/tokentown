@@ -286,7 +286,7 @@ define(function() {
         StructObject.prototype = Object.create(Struct.Object.prototype, properties);
         var nameProp = Object.getOwnPropertyDescriptor(StructObject, 'name');
         if (nameProp && nameProp.configurable) {
-          Object.defineProperty(BufferedStructObject, 'name', Object.assign(nameProp, {
+          Object.defineProperty(StructObject, 'name', Object.assign(nameProp, {
             name: this.name + '.Object',
           }));
         }
