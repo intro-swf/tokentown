@@ -409,8 +409,6 @@ define(function() {
   });
   Object.assign(Struct.Def.prototype, {
     endian: undefined,
-    fieldOrder: undefined,
-    namedFields: undefined,
     packed: true,
     padAlignBytes: 1,
     
