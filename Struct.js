@@ -404,7 +404,7 @@ define(function() {
       struct: true,
     },
     fieldDefs: {
-      u8: Object.assign(new StructFieldDef('u8'), {
+      u8: Object.assign(new Struct.FieldDef('u8'), {
         fixedByteLength: 1,
         defaultValue: 0,
         readValue: function(dv, o) {
@@ -420,7 +420,7 @@ define(function() {
           return null;
         },
       }),
-      i8: Object.assign(new StructFieldDef('i8'), {
+      i8: Object.assign(new Struct.FieldDef('i8'), {
         fixedByteLength: 1,
         defaultValue: 0,
         readValue: function(dv, o) {
