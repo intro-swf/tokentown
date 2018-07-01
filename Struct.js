@@ -401,6 +401,8 @@ define(function() {
         byteOffset: {value:null},
         byteLength: {value:null},
         struct: {value:null},
+        bytes: {value:null},
+        dv: {value:null},
       }),
       writable: true,
       configurable: true,
