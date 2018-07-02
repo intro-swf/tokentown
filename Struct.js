@@ -41,7 +41,7 @@ define(function() {
   });
   
   Struct.FieldDef = function StructFieldDef(name, settings) {
-    if (!this) {
+    if (!new.target) {
       if (name in fieldDefs) {
         throw new Error('field name in use: ' + name);
       }
