@@ -2,6 +2,8 @@ define(function() {
 
   'use strict';
   
+  const fieldDefs = Object.create(null);
+  
   function Struct() {
     throw new Error('invalid constructor, see documentation');
   }
@@ -38,11 +40,40 @@ define(function() {
     },
   });
   
-  Struct.FieldDef = function StructFieldDef(name) {
+  Struct.FieldDef = function StructFieldDef(name, settings) {
+    if (!this) {
+      if (name in fieldDefs) {
+        throw new Error('field name in use: ' + name);
+      }
+      return fieldDefs[name] = new StructFieldDef(name, settings);
+    }
+    if (typeof name !== 'string' || !/^[a-z_$][a-z_$0-9]*$/.test(name)) {
+      throw new Error('invalid name');
+    }
     this.name = name;
+    if (settings) Object.assign(this, settings);
   };
-  Struct.FieldDef.prototype = {
+  Struct.FieldDef.prototype = Object.create(null, {
+    minByteLength: {value:NaN, writable:true, enumerable:true, configurable:true},
+    maxByteLength: {value:NaN, writable:true, enumerable:true, configurable:true},
+    fixedByteLength: {
+      get: function() {
+        if (isNaN(this.minByteLength) || !isFinite(this.minByteLength) || this.minByteLength !== this.maxByteLength) {
+          return NaN;
+        }
+        return this.minByteLength;
+      },
+      set: function(n) {
+        this.minByteLength = this.maxByteLength = n;
+      },
+      enumerable: true,
+      configurable: true,
+    },
+  });
+  Object.assign(Struct.FieldDef.prototype, {
     name: undefined,
+    endian: undefined,
+    charset: 'x-bytestring',
     getDataView: function(buffer, byteOffset) {
       const byteLength = this.fixedByteLength;
       if (!isNaN(byteLength)) {
@@ -64,17 +95,6 @@ define(function() {
     },
     writeValue: function(dataView, byteOffset) {
       throw new Error('writeValue not implemented');
-    },
-    minByteLength: NaN,
-    maxByteLength: NaN,
-    get fixedByteLength() {
-      if (isNaN(this.minByteLength) || !isFinite(this.minByteLength) || this.minByteLength !== this.maxByteLength) {
-        return NaN;
-      }
-      return this.minByteLength;
-    },
-    set fixedByteLength(n) {
-      this.minByteLength = this.maxByteLength = n;
     },
     paddingAlignment: 1,
     addObjectPropertyDescriptors: function(obj, name) {
@@ -217,9 +237,52 @@ define(function() {
         enumerable: true,
       };
     },
-  };
+  });
   
-  Struct.Def = function StructDef(name) {
+  Struct.FieldDef('u8', {
+    fixedByteLength: 1,
+    defaultValue: 0,
+    readValue: function(dv, o) {
+      return dv.getUint8(o);
+    },
+    writeValue: function(dv, o, v) {
+      dv.setUint8(o, v);
+    },
+    getValueError: function(value) {
+      if ((value&0xff) !== value) {
+        return new Error('invalid u8 value: ' + value);I
+      }
+      return null;
+    },
+  });
+  
+  Struct.FieldDef('i8', {
+    fixedByteLength: 1,
+    defaultValue: 0,
+    readValue: function(dv, o) {
+      return dv.getInt8(o);
+    },
+    writeValue: function(dv, o, v) {
+      dv.setInt8(o, v);
+    },
+    getValueError: function(value) {
+      if ((value<<24>>24) !== value) {
+        return new Error('invalid i8 value: ' + value);
+      }
+      return null;
+    },
+  });
+  
+  Struct.Def = function StructDef(name, settings) {
+    if (!this) {
+      if (name in fieldDefs) {
+        throw new Error('field name in use: ' + name);
+      }
+      return fieldDefs[name] = new StructDef(name, settings);
+    }
+    if (typeof name !== 'string' || !/^[a-z_$][a-z_$0-9]*$/.test(name)) {
+      throw new Error('invalid name');
+    }
     this.name = name;
     this.fieldDefs = Object.create(this.fieldDefs);
     this.fieldOrder = [];
@@ -409,7 +472,7 @@ define(function() {
       enumerable: true,
     },
     fieldDefs: {
-      value: Object.create(null),
+      value: fieldDefs,
       writable: true,
       configurable: true,
       enumerable: true,
@@ -461,40 +524,6 @@ define(function() {
       });
       return this;
     },
-  });
-  Object.assign(Struct.Def.prototype.fieldDefs, {
-    u8: Object.assign(new Struct.FieldDef('u8'), {
-      fixedByteLength: 1,
-      defaultValue: 0,
-      readValue: function(dv, o) {
-        return dv.getUint8(o);
-      },
-      writeValue: function(dv, o, v) {
-        dv.setUint8(o, v);
-      },
-      getValueError: function(value) {
-        if ((value&0xff) !== value) {
-          return new Error('invalid u8 value: ' + value);I
-        }
-        return null;
-      },
-    }),
-    i8: Object.assign(new Struct.FieldDef('i8'), {
-      fixedByteLength: 1,
-      defaultValue: 0,
-      readValue: function(dv, o) {
-        return dv.getInt8(o);
-      },
-      writeValue: function(dv, o, v) {
-        dv.setInt8(o, v);
-      },
-      getValueError: function(value) {
-        if ((value<<24>>24) !== value) {
-          return new Error('invalid i8 value: ' + value);
-        }
-        return null;
-      },
-    }),
   });
   
   return Struct;
