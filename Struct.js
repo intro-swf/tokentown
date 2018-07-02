@@ -273,6 +273,33 @@ define(function() {
     },
   });
   
+  Struct.FieldDef('u32', {
+    fixedByteLength: 4,
+    defaultValue: 0,
+    getValueError: function(value) {
+      if ((value>>>0) !== value) {
+        return new Error('invalid u32 value: ' + value);
+      }
+      return null;
+    },
+    asLittleEndian: {
+      readValue: function(dv, o) {
+        return dv.getUint32(o, true);
+      },
+      writeValue: function(dv, o, v) {
+        dv.setUint32(o, v);
+      },
+    },
+    asBigEndian: {
+      readValue: function(dv, o) {
+        return dv.getUint32(o, false);
+      },
+      writeValue: function(dv, o, v) {
+        dv.setUint32(o, v, false);
+      },
+    },
+  });
+  
   Struct.Def = function StructDef(name, settings) {
     if (!new.target) {
       if (name in fieldDefs) {
