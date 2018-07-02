@@ -47,7 +47,7 @@ define(function() {
       }
       return fieldDefs[name] = new StructFieldDef(name, settings);
     }
-    if (typeof name !== 'string' || !/^[a-z_$][a-z_$0-9]*$/.test(name)) {
+    if (typeof name !== 'string' || !/^[a-z_$][a-z_$0-9]*$/i.test(name)) {
       throw new Error('invalid name');
     }
     this.name = name;
@@ -280,7 +280,7 @@ define(function() {
       }
       return fieldDefs[name] = new StructDef(name, settings);
     }
-    if (typeof name !== 'string' || !/^[a-z_$][a-z_$0-9]*$/.test(name)) {
+    if (typeof name !== 'string' || !/^[a-z_$][a-z_$0-9]*$/i.test(name)) {
       throw new Error('invalid name');
     }
     this.name = name;
